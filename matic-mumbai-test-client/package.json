@@ -39,7 +39,17 @@
     ]
   },
   "devDependencies": {
+    "babel-plugin-styled-components": "^1.12.0",
     "stylelint": "^13.13.1",
+    "stylelint-config-recommended": "^5.0.0",
     "stylelint-config-standard": "^22.0.0"
-  }
+  },
+  "presets": [
+    "es2015"
+  ],
+  "plugins": [
+    "transform-class-properties",
+    "styled-components",
+    "babel-plugin-styled-components"
+  ]
 }
