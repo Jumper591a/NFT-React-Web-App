@@ -501,6 +501,22 @@ export const fadeOutUp2 = keyframes` {
   }
   `;
 
+export const hidden = keyframes`
+0%{
+    visibility: visible;
+}
+50% {
+  opacity:0;
+  }
+  100% {
+  opacity:0;
+
+    visibility: hidden;
+    position: absolute; 
+  }
+
+`;
+
 export const rotateInFadeOutUp = keyframes`
   0% {
     /* z-index:1; */
@@ -557,3 +573,67 @@ export const fadeIn = keyframes`
     
    }
    `;
+export const ZoomIn = keyframes`
+   0% {
+      opacity 0;
+      z-index: 0;
+      transform: scale3d(0.3, 0.3, 0.3);
+
+      }
+   100% {
+    opacity 1;
+    z-index: 0;
+
+    
+   }
+   `;
+
+export const pushRight = keyframes`
+   0% {
+      
+
+      }
+   100% {
+    margin-right:13px;
+    
+   }
+   `;
+
+export const display = keyframes`
+   0% {
+    opacity 0;
+  
+      }
+   100% {
+     opacity 1;
+    position: relative;
+    visibility: visible;
+    
+   }
+   `;
+
+export const three = keyframes`
+	100% {
+    text-shadow: -2px 2px #fc3290, -4px 4px #fc3290, -6px 6px #fc3290,
+    -8px 8px #fc3290, 2px -30px 15px #fc3290);
+	transform: skew(15deg);
+	}
+`;
+
+export const colorRotate = keyframes`
+  from {
+    color: #6666ff;
+  }
+  10% {
+    color: #00ff00;
+  }
+  50% {
+    color: #0099ff;
+  }
+  75% {
+    color: yellow;
+  }
+  100% {
+    color: orange;
+  }
+  `;
