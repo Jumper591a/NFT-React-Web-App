@@ -11,6 +11,8 @@ import VpnKeyOutlinedIcon from "@material-ui/icons/VpnKeyOutlined";
 import SearchIcon from "@material-ui/icons/Search";
 import VpnKeyTwoToneIcon from "@material-ui/icons/VpnKeyTwoTone";
 import VpnKeyRoundedIcon from "@material-ui/icons/VpnKeyRounded";
+import { MinimizeTwoTone } from "@material-ui/icons";
+
 import TextField from "@material-ui/core/TextField";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
@@ -19,6 +21,8 @@ import FormControl from "@material-ui/core/FormControl";
 import Select from "@material-ui/core/Select";
 import { useFileUpload } from "use-file-upload";
 import "../index.css";
+
+import VideoLooper from "react-video-looper";
 
 import {
   jello,
@@ -248,7 +252,7 @@ S.Form = styled.form`
   flex-direction: column;
   align-items: center;
   margin-right: 20px;
-  @media screen and (max-width: 1390px) {
+  @media screen and (max-width: 1134px) {
     margin-top: 20px;
     margin-bottom: 20px;
     margin-right: 0px;
@@ -376,7 +380,13 @@ S.StyledBtn = styled(Button)`
   }
 `;
 S.Flex = styled.div`
+  width: 100%;
+  position: relative;
   display: flex;
+  flex-direction: ${(props) => (props.flexDirection ? "column" : "row")};
+  justify-content: ${(props) => (props.flexDirection ? "center" : "normal")};
+  align-items: ${(props) => (props.flexDirection ? "center" : "normal")};
+
   & .first-child-FileDetails {
     color: #333333;
     margin-right: 10px;
@@ -427,15 +437,17 @@ S.FormResult = styled.span`
 `;
 
 S.NftName = styled.div`
+  --c1: #1dd3b01a;
+  --c2: #fc3290;
   text-align: center;
   margin-top: 20px;
   font-weight: 700;
   font-size: 70px;
   color: #ffffffa0;
   letter-spacing: 0.5rem;
-  text-shadow: 2px 2px #fc3290, 4px 4px #fc3290, 6px 6px #fc3290,
-    8px 8px #fc3290, 2px 30px 15px #fc3290;
-  /* border: 2px double #fc3290; */
+  text-shadow: 2px 2px var(--c2), 4px 4px var(--c2), 6px 6px var(--c2),
+    8px 8px var(--c2), 2px 30px 25px var(--c2);
+  /* border: 2px double var(--c1); */
   /* border-radius: 1rem; */
   padding: 0 10px 10px 10px;
   transform: skew(-15deg);
@@ -449,6 +461,23 @@ S.ResultDetails = styled.h3`
   animation-name: ${colorRotate};
   animation-timing-function: ease-in-out;
 `;
+S.VideoLooper = styled(VideoLooper)`
+  width: calc(100% - 10px);
+  max-width: auto;
+  max-height: 300px;
+  object-fit: cover;
+  background-color: transparent;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  border-top-right-radius: 15px;
+  border-top-left-radius: 15px;
+
+  margin: 15px 5px;
+  & > div {
+    display: none;
+  }
+`;
+
 const App = () => {
   const [connected, setConnected] = useState(0);
   const [open, setOpen] = React.useState(false);
@@ -472,6 +501,22 @@ const App = () => {
     setSwag(event.target.value);
   };
 
+  const Mint = (e) => {
+    e.preventDefault();
+    if (file)
+      if (file.file.type.includes("video")) {
+        alert("hi");
+      }
+  };
+
+  const BrowseMedia = (e) => {
+    e.preventDefault();
+    // Single File Upload
+    selectFile({}, ({ source, name, size, file }) => {
+      // file - is the raw File Object
+      console.log({ source, name, size, file });
+    });
+  };
   return (
     <S.AppContainer>
       <S.LoaderContainer>
@@ -551,15 +596,7 @@ const App = () => {
             margin=""
             borderColor="white"
             color="#440099"
-            onClick={(event) => {
-              event.preventDefault();
-              // Single File Upload
-              selectFile({}, ({ source, name, size, file }) => {
-                // file - is the raw File Object
-                console.log({ source, name, size, file });
-                // Todo: Upload to cloud.
-              });
-            }}
+            onClick={(event) => BrowseMedia(event)}
           ></S.StyledBtn>
 
           {file ? (
@@ -598,6 +635,7 @@ const App = () => {
             animation="rubberBand"
             bold="bolder"
             boarderColor="#440099"
+            onClick={(event) => Mint(event)}
           >
             MINT
           </S.StyledBtn>
@@ -609,13 +647,12 @@ const App = () => {
         </S.Form>
         <S.FormResult>
           {file && (
-            <div>
-              <S.NftName>Jerry Stackhouznse</S.NftName>
-              {/* {file.file.type.includes("image") && <p>image</p>} */}
-              {/* {file.file.type.includes("video") && <p>video</p>} */}
+            <S.Flex flexDirection="true">
+              <S.NftName>Shock G</S.NftName>
+
               <S.Flex id="first-child-Flex">
                 <S.ResultDetails color="#fc3290">Description: </S.ResultDetails>{" "}
-                <S.ResultDetails> NFT of Jerry Balling </S.ResultDetails>
+                <S.ResultDetails> NFT of Shock G </S.ResultDetails>
               </S.Flex>
 
               <S.Flex>
@@ -637,7 +674,24 @@ const App = () => {
                 <S.ResultDetails color="#fc3290">Swag Level: </S.ResultDetails>{" "}
                 <S.ResultDetails> Ice 🧊</S.ResultDetails>
               </S.Flex>
-            </div>
+              <S.Flex flexDirection="true">
+                {file.file.type.includes("video") && (
+                  <S.VideoLooper
+                    source={file.source}
+                    start={0.0}
+                    end={7.0}
+                    muted={true}
+                    autoplay={true}
+                    loopCount={25}
+                    isDebugMode={false}
+                  />
+                )}
+                {file.file.type.includes("image") && (
+                  <p>Image: {file.source}</p>
+                )}
+                {/* {file.file.type.includes("video") && <p>Video: {file.source}</p>} */}
+              </S.Flex>
+            </S.Flex>
           )}
         </S.FormResult>
         <div></div>

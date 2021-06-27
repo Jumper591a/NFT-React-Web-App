@@ -611,11 +611,13 @@ export const display = keyframes`
     
    }
    `;
+const neonColor1 = "#1dd3b01a";
+const neonColor2 = "#fc3290";
 
 export const three = keyframes`
 	100% {
-    text-shadow: -2px 2px #fc3290, -4px 4px #fc3290, -6px 6px #fc3290,
-    -8px 8px #fc3290, 2px -30px 15px #fc3290);
+    text-shadow: -2px 2px ${neonColor2}, -4px 4px ${neonColor2}, -6px 6px ${neonColor2},
+    -8px 8px ${neonColor2}, 2px -30px 25px ${neonColor2});
 	transform: skew(15deg);
 	}
 `;
