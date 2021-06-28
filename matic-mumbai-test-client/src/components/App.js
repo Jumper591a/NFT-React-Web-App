@@ -23,7 +23,11 @@ import { useFileUpload } from "use-file-upload";
 import "../index.css";
 
 import VideoLooper from "react-video-looper";
-
+import {
+  testAuthentication,
+  pinFileToIPFS,
+  pinJSONToIPFS,
+} from "../shared/_Pinata_API";
 import {
   jello,
   three,
@@ -239,7 +243,7 @@ S.FlexContainer = styled.div`
   }
 `;
 
-S.Form = styled.form`
+S.FormInput = styled.form`
   background-color: #fc3290;
   border: 2px #333333 inset;
   min-height: 654.417px;
@@ -252,7 +256,7 @@ S.Form = styled.form`
   flex-direction: column;
   align-items: center;
   margin-right: 20px;
-  @media screen and (max-width: 1134px) {
+  @media screen and (max-width: 1144px) {
     margin-top: 20px;
     margin-bottom: 20px;
     margin-right: 0px;
@@ -420,7 +424,7 @@ S.FormResult = styled.span`
   flex-direction: column;
   align-items: center;
   min-height: 654.417px;
-  max-width: 790px;
+  max-width: 569.167px;
   /* min-width: 490.198px; */
 
   border-top-left-radius: 20px;
@@ -428,7 +432,7 @@ S.FormResult = styled.span`
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
   min-width: 569.167px;
-  @media screen and (max-width: 1040px) {
+  @media screen and (max-width: 1123px) {
     margin-bottom: 100px;
   }
   & #first-child-Flex {
@@ -471,17 +475,43 @@ S.VideoLooper = styled(VideoLooper)`
   border-bottom-right-radius: 15px;
   border-top-right-radius: 15px;
   border-top-left-radius: 15px;
+  position: relative;
+  /* border: white double 2px; */
 
   margin: 15px 5px;
   & > div {
     display: none;
   }
+  & > video {
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    border-top-right-radius: 15px;
+    border-top-left-radius: 15px;
+    border: none;
+    /* border: white double 2px; */
+  }
+  &:nth-child(3) {
+    display: none;
+  }
+`;
+S.NftImage = styled.img`
+  max-width: auto;
+  max-height: 300px;
+  object-fit: cover;
+  margin: 15px 5px;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  border-top-right-radius: 15px;
+  border-top-left-radius: 15px;
 `;
 
 const App = () => {
   const [connected, setConnected] = useState(0);
   const [open, setOpen] = React.useState(false);
-  const [swag, setSwag] = React.useState("");
+  const [swagType, setSwagType] = React.useState("");
+  const [nftName, setNftName] = React.useState("");
+  const [nftDescription, setNftDescription] = React.useState("");
+
   const [file, selectFile] = useFileUpload();
 
   const handleTooltipClose = () => {
@@ -497,18 +527,76 @@ const App = () => {
     setConnected(1);
   };
 
-  const handleChange = (event) => {
-    setSwag(event.target.value);
-  };
-
   const Mint = (e) => {
     e.preventDefault();
-    if (file)
-      if (file.file.type.includes("video")) {
-        alert("hi");
-      }
-  };
+    console.log("Mint event", nftName, swagType, nftDescription);
+    testAuthentication();
 
+    if (file) {
+      // pinFileToIPFS("", file);
+      const media_url_metadata = JSON.stringify({ url: file.source });
+      pinJSONToIPFS(media_url_metadata);
+
+      let metaData = {
+        title: nftName,
+        name: nftName,
+        description: nftDescription,
+        type: "object",
+        properties: {
+          name: {
+            type: "string",
+            description: nftName,
+          },
+          description: {
+            type: "string",
+            description: nftDescription,
+          },
+          preview_media_file_type: {
+            type: "string",
+            description: file.file.type.substring(
+              file.file.type.indexOf("/") + 1
+            ),
+          },
+          preview_media_file: {
+            type: "string",
+            description: "https://gateway.pinata.cloud/ipfs/",
+          },
+          created_at: {
+            type: "datetime",
+            description: Date.now(),
+          },
+          total_supply: { type: "int", description: 1 },
+          digital_media_signature_type: {
+            type: "string",
+            description: "SHA-256",
+          },
+          digital_media_signature: {
+            type: "string",
+            description: "0x6A3aBEFa8cbb935e05cB50bA3Fff22D9FC4bC4B2",
+          },
+        },
+      };
+
+      if (file.file.type.includes("video")) {
+        metaData.video = "";
+        metaData.properties.video_author = "";
+        metaData.properties.preview_media_file_type = {
+          type: "string",
+          description: file.file.type.substring(
+            file.file.type.indexOf("/") + 1
+          ),
+        };
+      } else if (file.file.type.includes("image")) {
+        metaData.image = "";
+        metaData.imageUrl = "https://gateway.pinata.cloud/ipfs/";
+        metaData.properties.image = {
+          type: "string",
+          description: "",
+        };
+        metaData.properties.image_author = "";
+      }
+    }
+  };
   const BrowseMedia = (e) => {
     e.preventDefault();
     // Single File Upload
@@ -538,6 +626,7 @@ const App = () => {
           </S.Button>
         </S.Tooltip>
       </S.Header>
+
       <S.WalletConnectContain animation={connected ? true : false}>
         <S.WalletConnectText animation={connected ? "fadeOutUp2" : ""}>
           Connect
@@ -553,13 +642,25 @@ const App = () => {
           Wallet
         </S.WalletConnectText>
       </S.WalletConnectContain>
+
       <S.FlexContainer animation={connected ? "ZoomIn" : ""}>
-        <S.Form>
+        <S.FormInput>
           <S.FormTitle fontSize="15px" marginTop="20px">
             Matic-Mumbai Test Network
           </S.FormTitle>
+
           <S.FormTitle>Mint your NFT</S.FormTitle>
-          <S.TextField id="outlined-basic" label="Name" variant="outlined" />
+
+          <S.TextField
+            id="outlined-basic"
+            label="Name"
+            variant="outlined"
+            onChange={(event) => setNftName(event.target.value)}
+
+            // error
+            // helperText="Give the NFT a Name Property"
+          />
+
           <S.FormControl variant="outlined">
             <InputLabel id="demo-simple-select-outlined-label">
               Swag Type
@@ -567,8 +668,8 @@ const App = () => {
             <Select
               labelId="demo-simple-select-outlined-label"
               id="demo-simple-select-outlined"
-              value={swag}
-              onChange={handleChange}
+              value={swagType}
+              onChange={(event) => setSwagType(event.target.value)}
               label="Swag Type"
             >
               <MenuItem value="">
@@ -588,7 +689,12 @@ const App = () => {
             rows={4}
             defaultValue=""
             variant="outlined"
+            onChange={(event) => setNftDescription(event.target.value)}
+
+            // error
+            // helperText="Give the NFT a Description Property"
           />
+
           <S.StyledBtn
             variant="contained"
             startIcon={<SearchIcon />}
@@ -597,7 +703,7 @@ const App = () => {
             borderColor="white"
             color="#440099"
             onClick={(event) => BrowseMedia(event)}
-          ></S.StyledBtn>
+          />
 
           {file ? (
             <S.FileDetailsBox id="main-FileDetailsBox">
@@ -621,6 +727,7 @@ const App = () => {
               <S.FileDetails> 🔍🤔 Attach a media source ? . . .</S.FileDetails>
             </S.FileDetailsBox>
           )}
+
           <S.FileDetailsBox margin="60px">
             <S.FileDetails>
               ⮷ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;
@@ -628,6 +735,7 @@ const App = () => {
               &nbsp; &nbsp;⮶{" "}
             </S.FileDetails>
           </S.FileDetailsBox>
+
           <S.StyledBtn
             variant="outlined"
             color="primary"
@@ -639,12 +747,13 @@ const App = () => {
           >
             MINT
           </S.StyledBtn>
+
           <S.FileDetailsBox>
             <S.FileDetails>
               ⮵ &nbsp; <span>Mint when you are ready</span> &nbsp; ⮴{" "}
             </S.FileDetails>
           </S.FileDetailsBox>
-        </S.Form>
+        </S.FormInput>
         <S.FormResult>
           {file && (
             <S.Flex flexDirection="true">
@@ -686,15 +795,14 @@ const App = () => {
                     isDebugMode={false}
                   />
                 )}
+
                 {file.file.type.includes("image") && (
-                  <p>Image: {file.source}</p>
+                  <S.NftImage src={file.source}></S.NftImage>
                 )}
-                {/* {file.file.type.includes("video") && <p>Video: {file.source}</p>} */}
               </S.Flex>
             </S.Flex>
           )}
         </S.FormResult>
-        <div></div>
       </S.FlexContainer>
     </S.AppContainer>
   );
