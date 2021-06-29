@@ -24,6 +24,7 @@ import { useFileUpload } from "use-file-upload";
 import "../index.css";
 
 import VideoLooper from "react-video-looper";
+import { CountdownCircleTimer } from "react-countdown-circle-timer";
 
 import {
   testAuthentication,
@@ -53,6 +54,7 @@ import {
   colorRotate,
   pushRight,
   spin,
+  fadeInUp2,
 } from "../shared/_Keyframes";
 
 const S = {};
@@ -64,7 +66,36 @@ S.AppContainer = styled.div`
 
   height: 100vh;
   background-color: #ffffff;
-  overflow-y: hidden;
+  overflow-y: scroll;
+
+  &::-webkit-scrollbar-track {
+    border: 1px double rgb(255, 255, 255);
+    padding: 2px 0;
+    background-color: #f3f3f3;
+    border-top-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-top-right-radius: 5px;
+  }
+
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    box-shadow: inset 0 0 6px #c7c7c7;
+    background-color: #fe3c7380;
+    border: 1px solid rgb(255, 255, 255);
+    border-top-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-top-right-radius: 3px;
+    /* visibility: hidden; */
+  }
+
+  body:hover::-webkit-scrollbar-thumb {
+    visibility: visible;
+  }
 
   &:hover {
     background: white;
@@ -405,18 +436,39 @@ S.Flex = styled.div`
   flex-direction: ${(props) => (props.flexDirection ? "column" : "row")};
   justify-content: ${(props) => (props.flexDirection ? "center" : "normal")};
   align-items: ${(props) => (props.flexDirection ? "center" : "normal")};
+  margin-top: ${(props) => (props.marginTop ? "40%" : "auto")};
+  animation-name: ${(props) => (props.animation ? fadeInUp2 : "")};
+  animation-duration: 1.5s;
+  animation-timing-function: ease-in-out;
 
   & .first-child-FileDetails {
     color: #333333;
     margin-right: 10px;
   }
 `;
+
+S.FlexLoader = styled.div`
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: ${(props) => (props.flexDirection ? "column" : "row")};
+  justify-content: ${(props) => (props.flexDirection ? "center" : "normal")};
+  align-items: ${(props) => (props.flexDirection ? "center" : "normal")};
+  margin-top: ${(props) => (props.marginTop ? "40%" : "auto")};
+  & > div {
+    height: 220px !important;
+    width: 220pc !important;
+  }
+`;
+
 S.FileDetailsBox = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  margin: ${(props) => (props.margins ? props.margins : "0")};
   margin-top: ${(props) => (props.margin ? props.margin : "15px")};
+
   &#main-FileDetailsBox {
     justify-content: flex-start;
     align-items: flex-start;
@@ -430,6 +482,19 @@ S.FileDetails = styled.h3`
   & > span {
     font-size: 0.8em;
   }
+`;
+
+S.NftLoadingDetails = styled.div`
+  color: ${(props) => (props.color ? props.color : "white")};
+  text-align: center;
+  font-family: "Montserrat", sans-serif;
+  font-weight: ${(props) => (props.bold ? props.bold : "100")};
+  padding: ${(props) => (props.padding ? `${props.padding} 0px ` : "white")};
+
+  /* -webkit-text-stroke: ${(props) =>
+    props.bold ? "0.1px #0096FF" : "0px transparent"}; */
+
+  font-size: ${(props) => (props.fontSize ? props.fontSize : "1.17em")};
 `;
 
 S.FormResult = styled.span`
@@ -543,6 +608,8 @@ const App = () => {
   });
 
   const [file, selectFile] = useFileUpload();
+
+  const [nftLoading, setNftLoading] = useState(false);
 
   const metaMask = window.ethereum;
   const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -698,6 +765,7 @@ const App = () => {
         };
         metadata.properties.image_author = "";
       }
+
       await pinJSONToIPFS(metadata).then(function (res) {
         //handle res here
         console.log("JSON pinning res", res, "IPFShash", res.data["IpfsHash"]);
@@ -723,61 +791,77 @@ const App = () => {
     const res = await pinToPinata();
     if (res.status === true) {
       console.log("success", res["IPFSHash"]);
-      const URI = `ipfs://${res["IPFSHash"]}`;
+      const URI = `https://gateway.pinata.cloud/ipfs/${res["IPFSHash"]}`;
       const _contract_with_sig = _contract.connect(signer);
-      await _contract_with_sig.safeMint(connected.account).then((res) => {
+      await _contract_with_sig.safeMint(connected.account, URI).then((res) => {
         console.log("safe_mint", res);
       });
 
-      const total_tokens = await _contract.balanceOf(connected.account);
-      const last_token_index = total_tokens.toNumber() - 1;
-      const minted_token = await _contract_with_sig.tokenByIndex(
-        last_token_index
-      );
-      console.log(
-        "balance",
-        total_tokens.toNumber(),
-        "last_token_index",
-        last_token_index,
-        "minted_token",
-        minted_token.toNumber()
-      );
-
-      await _contract_with_sig
-        .setTokenURI(minted_token.toNumber(), URI)
-        .then((res) => {
-          console.log("set uri res: ", res);
-        });
-
-      console.log("uri", URI);
-      let retrieved_uri;
-      retrieved_uri = await _contract.tokenURI(minted_token.toNumber());
-      console.log("retrieved_uri", retrieved_uri);
-      await retrievePinnedData(res["IPFSHash"]).then((res) => {
-        console.log("pinned data", res);
-        setIpfhData({
-          status: true,
-          title: res.data.properties.name.description,
-          description: res.data.properties.description.description,
-          swagType: res.data.properties.swagType.description,
-          swagScore: res.data.properties.swagScore.description,
-          legacy: res.data.properties.legacy.description,
-          swagLevel: res.data.properties.swagLevel.description,
-          video:
-            "video" in res.data.properties
-              ? res.data.properties.video.description
-              : "",
-          image:
-            "image" in res.data.properties
-              ? res.data.properties.image.description
-              : "",
-        });
-        setFormData({
-          swagType: "",
-          nftName: "",
-          nftDescription: "",
-        });
+      // await _contract_with_sig
+      //   .setTokenURI(minted_token.toNumber(), URI)
+      //   .then((res) => {
+      //     console.log("set uri res: ", res);
+      //   });
+      setNftLoading(true);
+      setFormData({
+        swagType: "",
+        nftName: "",
+        nftDescription: "",
       });
+      setIpfhData({
+        status: false,
+        title: "",
+        description: "",
+        swagType: "",
+        swagScore: "",
+        legacy: "",
+        swagLevel: "",
+        video: "",
+        image: "",
+      });
+
+      setTimeout(async () => {
+        setNftLoading(false);
+
+        const total_tokens = await _contract.balanceOf(connected.account);
+        const last_token_index =
+          total_tokens.toNumber() === 0 ? 0 : total_tokens.toNumber() - 1;
+        const minted_token = await _contract_with_sig.tokenByIndex(
+          last_token_index
+        );
+        console.log(
+          "balance",
+          total_tokens.toNumber(),
+          "last_token_index",
+          last_token_index,
+          "minted_token",
+          minted_token.toNumber()
+        );
+        console.log("uri", URI);
+        const retrieved_uri = await _contract.tokenURI(minted_token.toNumber());
+        console.log("retrieved_uri", retrieved_uri);
+
+        await retrievePinnedData(retrieved_uri).then((res) => {
+          console.log("pinned data", res);
+          setIpfhData({
+            status: true,
+            title: res.data.properties.name.description,
+            description: res.data.properties.description.description,
+            swagType: res.data.properties.swagType.description,
+            swagScore: res.data.properties.swagScore.description,
+            legacy: res.data.properties.legacy.description,
+            swagLevel: res.data.properties.swagLevel.description,
+            video:
+              "video" in res.data.properties
+                ? res.data.properties.video.description
+                : "",
+            image:
+              "image" in res.data.properties
+                ? res.data.properties.image.description
+                : "",
+          });
+        });
+      }, 20000);
     } else console.log("error", res);
   };
 
@@ -788,6 +872,49 @@ const App = () => {
       // file - is the raw File Object
       console.log({ source, name, size, file });
     });
+  };
+
+  const renderTime = ({ remainingTime }) => {
+    if (remainingTime === 0) {
+      return (
+        <S.FileDetailsBox margin="0px">
+          {" "}
+          <S.NftLoadingDetails color="true" bold="bolder" fontSize="30px">
+            FINISH !
+          </S.NftLoadingDetails>
+        </S.FileDetailsBox>
+      );
+    }
+
+    return (
+      <S.FileDetailsBox margins="10px">
+        <S.NftLoadingDetails>
+          {remainingTime <= 20 && remainingTime >= 16
+            ? "Decentralizing"
+            : remainingTime <= 15 && remainingTime >= 11
+            ? "Minting Token"
+            : remainingTime <= 10 && remainingTime >= 6
+            ? "Getting Token"
+            : remainingTime <= 5
+            ? "Getting Metadata"
+            : ""}
+        </S.NftLoadingDetails>
+        <S.NftLoadingDetails padding="5px" color="true" fontSize="40px">
+          {remainingTime}
+        </S.NftLoadingDetails>
+        <S.NftLoadingDetails>
+          {remainingTime <= 20 && remainingTime >= 16
+            ? "Data to IPFS"
+            : remainingTime <= 15 && remainingTime >= 11
+            ? "With IPFS Hash"
+            : remainingTime <= 10 && remainingTime >= 6
+            ? "stored IPFS Hash"
+            : remainingTime <= 5
+            ? "From IPFS"
+            : ""}
+        </S.NftLoadingDetails>
+      </S.FileDetailsBox>
+    );
   };
 
   return (
@@ -842,6 +969,7 @@ const App = () => {
           <S.TextField
             id="outlined-basic"
             label="Name"
+            value={formData.nftName}
             variant="outlined"
             onChange={(event) =>
               setFormData({
@@ -888,6 +1016,7 @@ const App = () => {
             multiline
             rows={4}
             defaultValue=""
+            value={formData.nftDescription}
             variant="outlined"
             onChange={(event) =>
               setFormData({
@@ -960,8 +1089,21 @@ const App = () => {
           </S.FileDetailsBox>
         </S.FormInput>
         <S.FormResult>
-          {ipfhData.status && (
-            <S.Flex flexDirection="true">
+          {nftLoading && (
+            <S.Flex flexDirection="true" marginTop="true">
+              <CountdownCircleTimer
+                isPlaying
+                duration={20}
+                colors={[["#FB2B14", 0.33], ["#E4FB14", 0.33], ["#14E4FB"]]}
+                onComplete={() => [true, 1000]}
+                size={250}
+              >
+                {renderTime}
+              </CountdownCircleTimer>
+            </S.Flex>
+          )}
+          {ipfhData.status && !nftLoading && (
+            <S.Flex flexDirection="true" animation="true">
               <S.NftName>{ipfhData.title}</S.NftName>
 
               <S.Flex id="first-child-Flex">

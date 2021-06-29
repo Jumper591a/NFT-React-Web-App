@@ -100,9 +100,9 @@ export const pinJSONToIPFS = async (JSONBody) => {
     });
 };
 
-export const retrievePinnedData = async (hash) => {
-  const url = `https://gateway.pinata.cloud/ipfs/${hash}`;
-  return await axios.get(url).catch(function (error) {
+export const retrievePinnedData = async (URL) => {
+  console.log("URL in pin func", URL);
+  return await axios.get(URL).catch(function (error) {
     //handle error here
     console.log("JSON pinning error", error);
     return Promise.reject(error);

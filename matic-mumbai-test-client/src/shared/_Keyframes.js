@@ -639,3 +639,15 @@ export const colorRotate = keyframes`
     color: orange;
   }
   `;
+
+export const fadeInUp2 = keyframes`
+from {
+    opacity: 0;
+    transform: translate3d(0, -10%, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+`;
