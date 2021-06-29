@@ -1,3 +1,4 @@
+import { RepeatOneSharp } from "@material-ui/icons";
 import swag_logo_1 from "../images/swag_logo_1.png";
 
 const axios = require("axios");
@@ -6,9 +7,9 @@ const FormData = require("form-data");
 const pinata_api_key = process.env.REACT_APP_PINATA_API_KEY;
 const pinata_secret_api_key = process.env.REACT_APP_PINATA_SECRET_API_KEY;
 
-export const testAuthentication = () => {
+export const testAuthentication = async () => {
   const url = `https://api.pinata.cloud/data/testAuthentication`;
-  return axios
+  return await axios
     .get(url, {
       headers: {
         pinata_api_key: pinata_api_key,
@@ -16,12 +17,12 @@ export const testAuthentication = () => {
       },
     })
     .then(function (response) {
-      //handle your response here
-      console.log("Response: ", response);
+      // console.log("Response: ", response);
+      return response;
     })
     .catch(function (error) {
-      //handle error here
-      console.log("error: ", error);
+      // console.log("error: ", error);
+      return Promise.reject(error);
     });
 };
 
@@ -82,26 +83,28 @@ export const pinFileToIPFS = (metadata = "", image = "") => {
     });
 };
 
-export const pinJSONToIPFS = (JSONBody) => {
+export const pinJSONToIPFS = async (JSONBody) => {
   const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
-  return axios
+
+  return await axios
     .post(url, JSONBody, {
       headers: {
         pinata_api_key: pinata_api_key,
         pinata_secret_api_key: pinata_secret_api_key,
       },
     })
-    .then(function (response) {
-      //handle response here
-      console.log(
-        "JSON pinning response",
-        response,
-        "IPFShash",
-        response.data["IpfsHash"]
-      );
-    })
     .catch(function (error) {
       //handle error here
       console.log("JSON pinning error", error);
+      return Promise.reject(error);
     });
+};
+
+export const retrievePinnedData = async (hash) => {
+  const url = `https://gateway.pinata.cloud/ipfs/${hash}`;
+  return await axios.get(url).catch(function (error) {
+    //handle error here
+    console.log("JSON pinning error", error);
+    return Promise.reject(error);
+  });
 };

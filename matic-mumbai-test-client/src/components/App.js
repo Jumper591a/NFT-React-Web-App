@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ethers } from "ethers";
 
 import styled, { css } from "styled-components/macro";
 import swag_logo_2 from "../images/swag_logo_2.jpg";
@@ -23,11 +24,16 @@ import { useFileUpload } from "use-file-upload";
 import "../index.css";
 
 import VideoLooper from "react-video-looper";
+
 import {
   testAuthentication,
   pinFileToIPFS,
   pinJSONToIPFS,
+  retrievePinnedData,
 } from "../shared/_Pinata_API";
+
+import { DAI_ABI, CONTRACT_ADDRESS, BYTE_CODE } from "../shared/_Constants";
+
 import {
   jello,
   three,
@@ -58,6 +64,7 @@ S.AppContainer = styled.div`
 
   height: 100vh;
   background-color: #ffffff;
+  overflow-y: hidden;
 
   &:hover {
     background: white;
@@ -172,13 +179,20 @@ S.WalletConnectAvatar = styled(Avatar)`
   height: 100px !important;
   border: 2px #f26d79 groove;
   cursor: pointer;
-  animation-name: ${(props) => (props.animation === "fadeIn" ? fadeIn : "")};
+  animation-name: ${(props) =>
+    props.animation === "fadeIn"
+      ? fadeIn
+      : props.animation === "rotateOut"
+      ? rotateOut
+      : ""};
   transform-origin: center;
-  animation-duration: 3.2s;
+  animation-duration: ${(props) =>
+    props.animation === "rotateOut" ? "1s" : "3.2s"};
   animation-timing-function: ease-in-out;
   animation-iteration-count: 1;
   animation-fill-mode: forwards;
-  animation-delay: 0.8s;
+  animation-delay: ${(props) =>
+    props.animation === "rotateOut" ? "0s" : "0.8s"};
 
   &:hover > svg {
     animation-name: ${jello};
@@ -188,7 +202,8 @@ S.WalletConnectAvatar = styled(Avatar)`
   }
   &:focus {
     z-index: 0;
-    animation-name: ${rotateOut};
+    animation-name: ${(props) =>
+      props.animation === "fadeIn" ? "" : rotateOut};
     transform-origin: center;
     animation-duration: 1s;
     animation-timing-function: ease-in-out;
@@ -475,7 +490,7 @@ S.VideoLooper = styled(VideoLooper)`
   border-bottom-right-radius: 15px;
   border-top-right-radius: 15px;
   border-top-left-radius: 15px;
-  position: relative;
+  /* position: relative; */
   /* border: white double 2px; */
 
   margin: 15px 5px;
@@ -491,7 +506,7 @@ S.VideoLooper = styled(VideoLooper)`
     /* border: white double 2px; */
   }
   &:nth-child(3) {
-    display: none;
+    /* display: none; */
   }
 `;
 S.NftImage = styled.img`
@@ -506,13 +521,34 @@ S.NftImage = styled.img`
 `;
 
 const App = () => {
-  const [connected, setConnected] = useState(0);
-  const [open, setOpen] = React.useState(false);
-  const [swagType, setSwagType] = React.useState("");
-  const [nftName, setNftName] = React.useState("");
-  const [nftDescription, setNftDescription] = React.useState("");
+  const [connected, setConnected] = useState({ status: false, account: "" });
+
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    swagType: "",
+    nftName: "",
+    nftDescription: "",
+  });
+
+  const [ipfhData, setIpfhData] = useState({
+    status: false,
+    title: "",
+    description: "",
+    swagType: "",
+    swagScore: "",
+    legacy: "",
+    swagLevel: "",
+    video: "",
+    image: "",
+  });
 
   const [file, selectFile] = useFileUpload();
+
+  const metaMask = window.ethereum;
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const providerRPC = new ethers.providers.JsonRpcProvider();
+  const signer = provider.getSigner();
+  const _contract = new ethers.Contract(CONTRACT_ADDRESS, DAI_ABI, provider);
 
   const handleTooltipClose = () => {
     setOpen(false);
@@ -522,40 +558,108 @@ const App = () => {
     setOpen(true);
   };
 
-  const connectWallet = (e) => {
+  const connectWallet = async (e) => {
     e.preventDefault();
-    setConnected(1);
+    if (typeof metaMask === "undefined") {
+      alert("Install MetaMask Extension First !");
+      window.location.reload();
+    } else {
+      const accounts = await metaMask.request({
+        method: "eth_requestAccounts",
+      });
+      const account = accounts[0];
+      const blockNumber = await provider.getBlockNumber();
+      const balance = await provider.getBalance(account);
+      const bigNumberFormatter = ethers.utils.formatEther(balance);
+      const userInputFormatted = ethers.utils.parseEther("1.0");
+
+      console.log(
+        "account: ",
+        account,
+        "\nblockNumber",
+        blockNumber,
+        "\nbalance",
+        balance,
+        "\nbigNumberFormatter",
+        bigNumberFormatter,
+        "\nuserInputFormatted",
+        userInputFormatted,
+        "\n_contract: ",
+        _contract
+      );
+      setConnected({ status: true, account: account });
+    }
+
+    console.log(
+      "provider: ",
+      provider,
+      "\nsigner: ",
+      signer,
+      "\n providerRPC",
+      providerRPC
+    );
+
+    // await provider.getBlockNumber();
+    // let balance = ethers.utils.formatEther(balance);
+    // console.log("balance", balance);
   };
 
-  const Mint = (e) => {
-    e.preventDefault();
-    console.log("Mint event", nftName, swagType, nftDescription);
-    testAuthentication();
+  const pinToPinata = async () => {
+    let status = 0;
+    let result = {};
+    await testAuthentication().then((res) => {
+      console.log("status", res.status);
+      status = res.status;
+    });
 
-    if (file) {
+    console.log("status after", status);
+
+    if (file && status === 200) {
       // pinFileToIPFS("", file);
-      const media_url_metadata = JSON.stringify({ url: file.source });
-      pinJSONToIPFS(media_url_metadata);
+      const swagLevel = "Ice";
+      const legacy = "Rockstar, [GOAT]";
+      const swagScore = "72";
+      const fileSize = `${file.size} KB`;
+      const fileType = file.file.type;
 
-      let metaData = {
-        title: nftName,
-        name: nftName,
-        description: nftDescription,
+      let metadata = {
+        title: formData.nftName,
+        name: "TestCoin",
+        description: formData.nftDescription,
+        swagType: formData.swagType,
+        swagScore: swagScore,
+        Legacy: legacy,
+        swagLevel: swagLevel,
+        fileSize: fileSize,
         type: "object",
         properties: {
           name: {
             type: "string",
-            description: nftName,
+            description: formData.nftName,
           },
           description: {
             type: "string",
-            description: nftDescription,
+            description: formData.nftDescription,
+          },
+          swagType: {
+            type: "string",
+            description: formData.swagType,
+          },
+          legacy: {
+            type: "string",
+            description: legacy,
+          },
+          swagScore: {
+            type: "string",
+            description: swagScore,
+          },
+          swagLevel: {
+            type: "string",
+            description: swagLevel,
           },
           preview_media_file_type: {
             type: "string",
-            description: file.file.type.substring(
-              file.file.type.indexOf("/") + 1
-            ),
+            description: fileType,
           },
           preview_media_file: {
             type: "string",
@@ -563,7 +667,7 @@ const App = () => {
           },
           created_at: {
             type: "datetime",
-            description: Date.now(),
+            description: "2021-13-21T17:52:51.269256+00:00",
           },
           total_supply: { type: "int", description: 1 },
           digital_media_signature_type: {
@@ -572,31 +676,111 @@ const App = () => {
           },
           digital_media_signature: {
             type: "string",
-            description: "0x6A3aBEFa8cbb935e05cB50bA3Fff22D9FC4bC4B2",
+            description: "0xCfdb2A5D3e85C3Bf6060f232dCbA8C7Fd757d3E5",
           },
         },
       };
 
       if (file.file.type.includes("video")) {
-        metaData.video = "";
-        metaData.properties.video_author = "";
-        metaData.properties.preview_media_file_type = {
+        metadata.video = file;
+        metadata.videoUrl = "https://gateway.pinata.cloud/ipfs/";
+        metadata.properties.video = {
           type: "string",
-          description: file.file.type.substring(
-            file.file.type.indexOf("/") + 1
-          ),
+          description: file.source,
         };
+        metadata.properties.video_author = "";
       } else if (file.file.type.includes("image")) {
-        metaData.image = "";
-        metaData.imageUrl = "https://gateway.pinata.cloud/ipfs/";
-        metaData.properties.image = {
+        metadata.image = file.source;
+        metadata.imageUrl = "https://gateway.pinata.cloud/ipfs/";
+        metadata.properties.image = {
           type: "string",
-          description: "",
+          description: file.source,
         };
-        metaData.properties.image_author = "";
+        metadata.properties.image_author = "";
       }
-    }
+      await pinJSONToIPFS(metadata).then(function (res) {
+        //handle res here
+        console.log("JSON pinning res", res, "IPFShash", res.data["IpfsHash"]);
+        result = {
+          status: true,
+          res: res,
+          IPFSHash: res.data["IpfsHash"],
+        };
+      });
+      // setIpfsHash(result.IPFSHash);
+      return result;
+    } else return { status: false };
   };
+
+  const Mint = async (e) => {
+    e.preventDefault();
+    console.log(
+      "Mint event",
+      formData.nftName,
+      formData.swagType,
+      formData.nftDescription
+    );
+    const res = await pinToPinata();
+    if (res.status === true) {
+      console.log("success", res["IPFSHash"]);
+      const URI = `ipfs://${res["IPFSHash"]}`;
+      const _contract_with_sig = _contract.connect(signer);
+      await _contract_with_sig.safeMint(connected.account).then((res) => {
+        console.log("safe_mint", res);
+      });
+
+      const total_tokens = await _contract.balanceOf(connected.account);
+      const last_token_index = total_tokens.toNumber() - 1;
+      const minted_token = await _contract_with_sig.tokenByIndex(
+        last_token_index
+      );
+      console.log(
+        "balance",
+        total_tokens.toNumber(),
+        "last_token_index",
+        last_token_index,
+        "minted_token",
+        minted_token.toNumber()
+      );
+
+      await _contract_with_sig
+        .setTokenURI(minted_token.toNumber(), URI)
+        .then((res) => {
+          console.log("set uri res: ", res);
+        });
+
+      console.log("uri", URI);
+      let retrieved_uri;
+      retrieved_uri = await _contract.tokenURI(minted_token.toNumber());
+      console.log("retrieved_uri", retrieved_uri);
+      await retrievePinnedData(res["IPFSHash"]).then((res) => {
+        console.log("pinned data", res);
+        setIpfhData({
+          status: true,
+          title: res.data.properties.name.description,
+          description: res.data.properties.description.description,
+          swagType: res.data.properties.swagType.description,
+          swagScore: res.data.properties.swagScore.description,
+          legacy: res.data.properties.legacy.description,
+          swagLevel: res.data.properties.swagLevel.description,
+          video:
+            "video" in res.data.properties
+              ? res.data.properties.video.description
+              : "",
+          image:
+            "image" in res.data.properties
+              ? res.data.properties.image.description
+              : "",
+        });
+        setFormData({
+          swagType: "",
+          nftName: "",
+          nftDescription: "",
+        });
+      });
+    } else console.log("error", res);
+  };
+
   const BrowseMedia = (e) => {
     e.preventDefault();
     // Single File Upload
@@ -605,45 +789,49 @@ const App = () => {
       console.log({ source, name, size, file });
     });
   };
+
   return (
     <S.AppContainer>
       <S.LoaderContainer>
         <S.LoaderImage />
       </S.LoaderContainer>
       <S.Header>
-        <S.HeaderLogo src={swag_logo_1} animation={connected ? true : false} />
+        <S.HeaderLogo
+          src={swag_logo_1}
+          animation={connected.status ? true : false}
+        />
         <S.Tooltip
           disableFocusListener
           disableTouchListener
-          title="Account: 0xd53CDbdD044bc9d58F6043ff7868A546A9FD2700 "
+          title={`Account: ${connected.account}`}
         >
           <S.Button
-            animation={connected ? true : false}
+            animation={connected.status ? true : false}
             disableRipple
-            display={connected ? "inline!important" : "none!important"}
+            display={connected.status ? "inline!important" : "none!important"}
           >
             Connected
           </S.Button>
         </S.Tooltip>
       </S.Header>
 
-      <S.WalletConnectContain animation={connected ? true : false}>
-        <S.WalletConnectText animation={connected ? "fadeOutUp2" : ""}>
+      <S.WalletConnectContain animation={connected.status ? true : false}>
+        <S.WalletConnectText animation={connected.status ? "fadeOutUp2" : ""}>
           Connect
         </S.WalletConnectText>
         <S.WalletConnectAvatar
-          animation={!connected ? "fadeIn" : ""}
+          animation={!connected.status ? "fadeIn" : "rotateOut"}
           onClick={(event) => connectWallet(event)}
           tabIndex={1}
         >
           <S.VpnKeyTwoToneIcon />
         </S.WalletConnectAvatar>
-        <S.WalletConnectText animation={connected ? "fadeOutUp2" : ""}>
+        <S.WalletConnectText animation={connected.status ? "fadeOutUp2" : ""}>
           Wallet
         </S.WalletConnectText>
       </S.WalletConnectContain>
 
-      <S.FlexContainer animation={connected ? "ZoomIn" : ""}>
+      <S.FlexContainer animation={connected.status ? "ZoomIn" : ""}>
         <S.FormInput>
           <S.FormTitle fontSize="15px" marginTop="20px">
             Matic-Mumbai Test Network
@@ -655,7 +843,13 @@ const App = () => {
             id="outlined-basic"
             label="Name"
             variant="outlined"
-            onChange={(event) => setNftName(event.target.value)}
+            onChange={(event) =>
+              setFormData({
+                swagType: formData.swagType,
+                nftName: event.target.value,
+                nftDescription: formData.nftDescription,
+              })
+            }
 
             // error
             // helperText="Give the NFT a Name Property"
@@ -668,8 +862,14 @@ const App = () => {
             <Select
               labelId="demo-simple-select-outlined-label"
               id="demo-simple-select-outlined"
-              value={swagType}
-              onChange={(event) => setSwagType(event.target.value)}
+              value={formData.swagType}
+              onChange={(event) =>
+                setFormData({
+                  swagType: event.target.value,
+                  nftName: formData.nftName,
+                  nftDescription: formData.nftDescription,
+                })
+              }
               label="Swag Type"
             >
               <MenuItem value="">
@@ -689,8 +889,13 @@ const App = () => {
             rows={4}
             defaultValue=""
             variant="outlined"
-            onChange={(event) => setNftDescription(event.target.value)}
-
+            onChange={(event) =>
+              setFormData({
+                swagType: formData.swagType,
+                nftName: formData.nftName,
+                nftDescription: event.target.value,
+              })
+            }
             // error
             // helperText="Give the NFT a Description Property"
           />
@@ -755,49 +960,73 @@ const App = () => {
           </S.FileDetailsBox>
         </S.FormInput>
         <S.FormResult>
-          {file && (
+          {ipfhData.status && (
             <S.Flex flexDirection="true">
-              <S.NftName>Shock G</S.NftName>
+              <S.NftName>{ipfhData.title}</S.NftName>
 
               <S.Flex id="first-child-Flex">
                 <S.ResultDetails color="#fc3290">Description: </S.ResultDetails>{" "}
-                <S.ResultDetails> NFT of Shock G </S.ResultDetails>
+                <S.ResultDetails> {ipfhData.description} </S.ResultDetails>
               </S.Flex>
 
               <S.Flex>
                 <S.ResultDetails color="#fc3290">Swag Type: </S.ResultDetails>{" "}
-                <S.ResultDetails> Art 🎨🖌️</S.ResultDetails>
+                <S.ResultDetails>
+                  {" "}
+                  {ipfhData.swagType.includes("Art")
+                    ? `${ipfhData.swagType} 🎨🖌️`
+                    : ipfhData.swagType.includes("Music")
+                    ? `${ipfhData.swagType} 🎵`
+                    : ipfhData.swagType.includes("Apparel")
+                    ? `${ipfhData.swagType} 👕`
+                    : ipfhData.swagType.includes("Accessories")
+                    ? `${ipfhData.swagType} 👓`
+                    : ipfhData.swagType}
+                </S.ResultDetails>
               </S.Flex>
 
               <S.Flex>
                 <S.ResultDetails color="#fc3290">Swag Score: </S.ResultDetails>{" "}
-                <S.ResultDetails animation="true"> 72 </S.ResultDetails>
+                <S.ResultDetails animation="true">
+                  {" "}
+                  {ipfhData.swagScore}{" "}
+                </S.ResultDetails>
               </S.Flex>
 
               <S.Flex>
                 <S.ResultDetails color="#fc3290">Legacy: </S.ResultDetails>{" "}
-                <S.ResultDetails> 🤘 Rockstar, [GOAT] </S.ResultDetails>
+                <S.ResultDetails>
+                  {" "}
+                  {ipfhData.legacy.includes("Rockstar")
+                    ? `🤘 ${ipfhData.legacy}`
+                    : ipfhData.legacy}{" "}
+                </S.ResultDetails>
               </S.Flex>
 
               <S.Flex>
                 <S.ResultDetails color="#fc3290">Swag Level: </S.ResultDetails>{" "}
-                <S.ResultDetails> Ice 🧊</S.ResultDetails>
+                <S.ResultDetails>
+                  {" "}
+                  {ipfhData.swagLevel.includes("Ice")
+                    ? `${ipfhData.swagLevel} 🧊`
+                    : ipfhData.swagLevel}{" "}
+                </S.ResultDetails>
               </S.Flex>
               <S.Flex flexDirection="true">
-                {file.file.type.includes("video") && (
+                {ipfhData.video && (
                   <S.VideoLooper
-                    source={file.source}
+                    source={ipfhData.video}
                     start={0.0}
                     end={7.0}
                     muted={true}
                     autoplay={true}
-                    loopCount={25}
+                    loopCount={15}
                     isDebugMode={false}
                   />
                 )}
 
-                {file.file.type.includes("image") && (
-                  <S.NftImage src={file.source}></S.NftImage>
+                {ipfhData.image && (
+                  <S.NftImage src={ipfhData.image}></S.NftImage>
                 )}
               </S.Flex>
             </S.Flex>
