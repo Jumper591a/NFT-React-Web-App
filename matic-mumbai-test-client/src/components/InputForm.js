@@ -1,5 +1,5 @@
 //*Importing from React and from installed Styled Components Libary.
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import styled from "styled-components/macro";
 
 //*Importing Material-UI components from the Installed Material UI library.
@@ -13,7 +13,12 @@ import FormControl from "@material-ui/core/FormControl";
 
 //*Importing ContextTheme (to pass state data to components) & Importing Keyframe animations for element effects.
 import { contextTheme } from "../shared/_Constants";
-import { rubberBand, shakeY, fadeInUp2 } from "../shared/_Keyframes";
+import {
+  rubberBand,
+  shakeY,
+  fadeInUp2,
+  colorRotate,
+} from "../shared/_Keyframes";
 
 //*Setting Styled Components.
 const S = {};
@@ -159,7 +164,12 @@ S.FileDetails = styled.h3`
   color: white;
   text-align: center;
   font-size: ${(props) => (props.fontSize ? props.fontSize : "1.17em")};
+  animation-name: ${(props) => (props.animation ? colorRotate : "")};
+  animation-duration: 1.8s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
   & > span {
+    color: white !important;
     font-size: 0.8em;
   }
 `;
@@ -201,7 +211,7 @@ S.FormControl = styled(FormControl)`
 
 export const InputForm = () => {
   //*Getting important state data via ContextTheme.
-  const { mint, formData, setFormData, file, selectFile } =
+  const { mint, formData, setFormData, selectFile, file } =
     useContext(contextTheme);
 
   //*Helper Function for collecting user Media data from input form submission.
@@ -212,8 +222,12 @@ export const InputForm = () => {
     selectFile({}, ({ source, name, size, file }) => {
       //? file - is the raw File Object
       console.log({ source, name, size, file });
+      setFormFile(true);
     });
   };
+
+  const [media, setMedia] = useState(false);
+  const [formFile, setFormFile] = useState(false);
 
   return (
     <S.FormInput>
@@ -235,13 +249,20 @@ export const InputForm = () => {
             nftDescription: formData.nftDescription,
           })
         }
-        // error
-        // helperText="Give the NFT a Name Property"
+        error={media && !formData.nftName ? true : false}
+        helperText={
+          media && !formData.nftName ? "Give the NFT a Name Property" : ""
+        }
       />
 
       <S.FormControl variant="outlined">
-        <InputLabel id="demo-simple-select-outlined-label">
-          Swag Type
+        <InputLabel
+          id="demo-simple-select-outlined-label"
+          error={media && !formData.swagType ? true : false}
+        >
+          {media && !formData.swagType
+            ? "Give the NFT a Swag Type Property"
+            : "Swag Type"}
         </InputLabel>
         <Select
           labelId="demo-simple-select-outlined-label"
@@ -281,8 +302,12 @@ export const InputForm = () => {
             nftDescription: event.target.value,
           })
         }
-        // error
-        // helperText="Give the NFT a Description Property"
+        error={media && !formData.nftDescription ? true : false}
+        helperText={
+          media && !formData.nftDescription
+            ? "Give the NFT a Description Property"
+            : ""
+        }
       />
 
       <S.StyledBtn
@@ -292,10 +317,13 @@ export const InputForm = () => {
         margin=""
         borderColor="white"
         color="#440099"
-        onClick={(event) => BrowseMedia(event)}
+        onClick={(event) => {
+          BrowseMedia(event);
+          // setMedia(!media);
+        }}
       />
 
-      {file ? (
+      {file && formFile ? (
         <S.FileDetailsBox id="main-FileDetailsBox">
           <S.Flex>
             <S.FileDetails className="first-child-FileDetails">
@@ -312,14 +340,32 @@ export const InputForm = () => {
         </S.FileDetailsBox>
       ) : (
         <S.FileDetailsBox>
-          <S.FileDetails> 🔍🤔 Attach a media source ? . . .</S.FileDetails>
+          <S.FileDetails animation={media && !file ? true : false}>
+            🔍🤔 Attach a media source ? . . .
+          </S.FileDetails>
         </S.FileDetailsBox>
       )}
 
-      <S.FileDetailsBox margin="60px">
-        <S.FileDetails>
-          ⮷ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;
-          &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;⮶
+      <S.FileDetailsBox
+        margin={
+          media && (!formData.nftName || !formData.nftDescription)
+            ? "30px"
+            : "60px"
+        }
+      >
+        <S.FileDetails
+          animation={
+            formFile &&
+            formData.swagType &&
+            formData.nftName &&
+            formData.nftDescription
+              ? true
+              : false
+          }
+        >
+          ⮷ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;
+          &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;
+          &nbsp;⮶
         </S.FileDetails>
       </S.FileDetailsBox>
 
@@ -330,13 +376,35 @@ export const InputForm = () => {
         animation="rubberBand"
         bold="bolder"
         boarderColor="#440099"
-        onClick={(event) => mint(event)}
+        onClick={(event) => {
+          event.preventDefault();
+          setMedia(true);
+          if (
+            file &&
+            formData.swagType &&
+            formData.nftName &&
+            formData.nftDescription
+          ) {
+            setFormFile(false);
+            setMedia(false);
+            mint();
+          }
+        }}
       >
         MINT
       </S.StyledBtn>
 
       <S.FileDetailsBox>
-        <S.FileDetails>
+        <S.FileDetails
+          animation={
+            formFile &&
+            formData.swagType &&
+            formData.nftName &&
+            formData.nftDescription
+              ? true
+              : false
+          }
+        >
           ⮵ &nbsp; <span>Mint when you are ready</span> &nbsp; ⮴
         </S.FileDetails>
       </S.FileDetailsBox>

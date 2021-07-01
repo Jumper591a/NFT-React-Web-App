@@ -1,5 +1,5 @@
 //*Importing from React and from installed Styled Components Libary.
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import styled from "styled-components/macro";
 
 //*Importing Ethers from Installed Ethers Libary.
@@ -8,6 +8,8 @@ import { ethers } from "ethers";
 //*Importing Ethers from Installed Ethers Libary.
 import Avatar from "@material-ui/core/Avatar";
 import VpnKeyRoundedIcon from "@material-ui/icons/VpnKeyRounded";
+import { Alert, AlertTitle } from "@material-ui/lab";
+import Snackbar from "@material-ui/core/Snackbar";
 
 //*Importing ContextTheme (to pass state data to components) & Importing Keyframe animations for element effects.
 import { contextTheme } from "../shared/_Constants";
@@ -17,14 +19,16 @@ import {
   fadeIn,
   fadeOutUp2,
   hidden,
+  rollIn,
 } from "../shared/_Keyframes";
 
 //*Setting Styled Components.
 const S = {};
 S.WalletConnectContain = styled.span`
-  display: flex;
-  justify-content: center;
-  margin-top: 30vh;
+  position: fixed;
+  bottom: 50vh;
+  left: 50vw;
+  right: 50vw;
   animation-name: ${(props) => (props.animation ? hidden : "")};
   transform-origin: center;
   animation-duration: 1s;
@@ -32,6 +36,41 @@ S.WalletConnectContain = styled.span`
   animation-iteration-count: 1;
   animation-fill-mode: forwards;
   animation-delay: 0.2s;
+
+  & .MuiAlert-standardError {
+    color: white;
+    background-color: #333333;
+  }
+  & .MuiSnackbar-anchorOriginBottomCenter {
+    bottom: 50vh;
+    width: 100%;
+  }
+
+  & .MuiAlert-root {
+    font-size: 2.875rem;
+  }
+  & .MuiAlert-standardError .MuiAlert-icon path {
+    color: red;
+    /* stroke: red; */
+  }
+  & .MuiTypography-root {
+    color: #fc3390;
+  }
+`;
+
+S.Flex = styled.div`
+  display: flex;
+  justify-content: center;
+  position: relative;
+  animation-name: ${(props) => (props.animation ? fadeIn : "")};
+  transform-origin: center;
+  animation-duration: 3.2s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+  animation-delay: 0.8s;
+  z-index: -1;
+  opacity: 0;
 `;
 S.WalletConnectAvatar = styled(Avatar)`
   vertical-align: center;
@@ -105,20 +144,27 @@ S.WalletConnectText = styled.p`
 export const ConnectWallet = () => {
   //*Getting important state data via ContextTheme.
   const { connected, setConnected } = useContext(contextTheme);
+  const [toast, setToast] = useState(false);
 
   //*Storing Ether information for getting the account ID later on.
   const metaMask = window.ethereum;
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const provider = metaMask
+    ? new ethers.providers.Web3Provider(metaMask)
+    : false;
   const providerRPC = new ethers.providers.JsonRpcProvider();
+
+  const toastClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setToast(false);
+  };
 
   //*Checking if window.etherum is detected in the browser (if not then Metamask needs to be installed) & getting Account ID.
   const connectWallet = async (e) => {
     e.preventDefault();
     if (typeof metaMask === "undefined") {
-      alert("Install MetaMask Extension First !");
-
-      //* Reloading Page if MetaMask is not installed.
-      window.location.reload();
+      setToast(true);
     } else {
       const accounts = await metaMask.request({
         method: "eth_requestAccounts",
@@ -138,19 +184,38 @@ export const ConnectWallet = () => {
 
   return (
     <S.WalletConnectContain animation={connected.status ? true : false}>
-      <S.WalletConnectText animation={connected.status ? "fadeOutUp2" : ""}>
-        Connect
-      </S.WalletConnectText>
-      <S.WalletConnectAvatar
-        animation={!connected.status ? "fadeIn" : "rotateOut"}
-        onClick={(event) => connectWallet(event)}
-        tabIndex={1}
+      <Snackbar
+        open={toast}
+        autoHideDuration={6000}
+        onClose={toastClose}
+        // anchorOrigin={{
+        //   horizontal: "center",
+        //   vertical: "bottom",
+        // }}
       >
-        <S.VpnKeyTwoToneIcon />
-      </S.WalletConnectAvatar>
-      <S.WalletConnectText animation={connected.status ? "fadeOutUp2" : ""}>
-        Wallet
-      </S.WalletConnectText>
+        <Alert onClose={toastClose} severity="error">
+          <AlertTitle>
+            Error: MetaMask not detected within the browser.
+          </AlertTitle>
+
+          <strong>Please Install Metamask!</strong>
+        </Alert>
+      </Snackbar>
+      <S.Flex animation={true}>
+        <S.WalletConnectText animation={connected.status ? "fadeOutUp2" : ""}>
+          Connect
+        </S.WalletConnectText>
+        <S.WalletConnectAvatar
+          animation={!connected.status ? "fadeIn" : "rotateOut"}
+          onClick={(event) => connectWallet(event)}
+          tabIndex={1}
+        >
+          <S.VpnKeyTwoToneIcon />
+        </S.WalletConnectAvatar>
+        <S.WalletConnectText animation={connected.status ? "fadeOutUp2" : ""}>
+          Wallet
+        </S.WalletConnectText>
+      </S.Flex>
     </S.WalletConnectContain>
   );
 };

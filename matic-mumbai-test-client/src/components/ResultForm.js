@@ -4,11 +4,19 @@ import styled from "styled-components/macro";
 
 //*Importing from shared folder
 import { contextTheme } from "../shared/_Constants";
-import { three, colorRotate, fadeInUp2 } from "../shared/_Keyframes";
+import {
+  three,
+  colorRotate,
+  lightSpeedInLeft,
+  fadeInUp2,
+  ZoomIn,
+} from "../shared/_Keyframes";
 
 //*Installed React Components.
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import VideoLooper from "react-video-looper";
+
+import swag_logo_1 from "../images/swag_logo_1.png";
 
 //*Setting Styled Components.
 const S = {};
@@ -42,10 +50,18 @@ S.Flex = styled.div`
   flex-direction: ${(props) => (props.flexDirection ? "column" : "row")};
   justify-content: ${(props) => (props.flexDirection ? "center" : "normal")};
   align-items: ${(props) => (props.flexDirection ? "center" : "normal")};
-  margin-top: ${(props) => (props.marginTop ? "40%" : "auto")};
-  animation-name: ${(props) => (props.animation ? fadeInUp2 : "")};
+  margin-top: ${(props) => (props.marginTop ? "40%" : "0px")};
+  opacity: 0;
+  animation-name: ${(props) =>
+    props.animation === "fadeInUp2"
+      ? fadeInUp2
+      : props.animation === "lightSpeedInLeft"
+      ? lightSpeedInLeft
+      : ZoomIn};
   animation-duration: 1.5s;
   animation-timing-function: ease-in-out;
+  animation-delay: ${(props) => (props.delay ? props.delay : "")};
+  animation-fill-mode: forwards;
 
   & .first-child-FileDetails {
     color: #333333;
@@ -211,15 +227,15 @@ export const ResultForm = () => {
       )}
 
       {[ipfsData.status && !nftLoading].includes(true) && (
-        <S.Flex flexDirection="true" animation="true">
+        <S.Flex flexDirection="true" animation={"fadeInUp2"}>
           <S.NftName>{ipfsData.title}</S.NftName>
 
-          <S.Flex id="first-child-Flex">
+          <S.Flex id="first-child-Flex" animation={"lightSpeedInLeft"}>
             <S.ResultDetails color="#fc3290">Description: </S.ResultDetails>
             <S.ResultDetails> {ipfsData.description} </S.ResultDetails>
           </S.Flex>
 
-          <S.Flex>
+          <S.Flex animation={"lightSpeedInLeft"} delay=".5s">
             <S.ResultDetails color="#fc3290">Swag Type: </S.ResultDetails>
             <S.ResultDetails>
               {ipfsData.swagType.includes("Art")
@@ -234,14 +250,14 @@ export const ResultForm = () => {
             </S.ResultDetails>
           </S.Flex>
 
-          <S.Flex>
+          <S.Flex animation={"lightSpeedInLeft"} delay="1.0s">
             <S.ResultDetails color="#fc3290">Swag Score: </S.ResultDetails>
-            <S.ResultDetails animation="true">
+            <S.ResultDetails animation="'lightSpeedInLeft'">
               {ipfsData.swagScore}
             </S.ResultDetails>
           </S.Flex>
 
-          <S.Flex>
+          <S.Flex animation={"lightSpeedInLeft"} delay="1.5s">
             <S.ResultDetails color="#fc3290">Legacy: </S.ResultDetails>
             <S.ResultDetails>
               {ipfsData.legacy.includes("Rockstar")
@@ -250,7 +266,7 @@ export const ResultForm = () => {
             </S.ResultDetails>
           </S.Flex>
 
-          <S.Flex>
+          <S.Flex animation={"lightSpeedInLeft"} delay="2.0s">
             <S.ResultDetails color="#fc3290">Swag Level: </S.ResultDetails>
             <S.ResultDetails>
               {ipfsData.swagLevel.includes("Ice")
@@ -259,7 +275,7 @@ export const ResultForm = () => {
             </S.ResultDetails>
           </S.Flex>
 
-          <S.Flex flexDirection="true">
+          <S.Flex flexDirection="true" animation={"ZoomIn"} delay="2.5s">
             {ipfsData.video && (
               <S.VideoLooper
                 source={ipfsData.video}

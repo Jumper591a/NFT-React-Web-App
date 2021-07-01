@@ -115,8 +115,7 @@ const App = () => {
   const [file, selectFile] = useFileUpload();
 
   //*Function for Minting token onto the network.
-  const mint = async (e) => {
-    e.preventDefault();
+  const mint = async () => {
     mintToNetwork(
       formData,
       file,
