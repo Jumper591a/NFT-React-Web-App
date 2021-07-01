@@ -41,6 +41,19 @@ S.WalletConnectContain = styled.span`
     color: white;
     background-color: #333333;
   }
+
+  & .MuiAlert-standardInfo {
+    color: #333333;
+  }
+
+  & ..MuiAlert-standardError .MuiTypography-root {
+    color: #fc3390;
+  }
+
+  & .MuiAlert-standardInfo .MuiTypography-root {
+    color: rgb(13, 60, 97);
+  }
+
   & .MuiSnackbar-anchorOriginBottomCenter {
     bottom: 50vh;
     width: 100%;
@@ -52,9 +65,6 @@ S.WalletConnectContain = styled.span`
   & .MuiAlert-standardError .MuiAlert-icon path {
     color: red;
     /* stroke: red; */
-  }
-  & .MuiTypography-root {
-    color: #fc3390;
   }
 `;
 
@@ -144,10 +154,15 @@ S.WalletConnectText = styled.p`
 export const ConnectWallet = () => {
   //*Getting important state data via ContextTheme.
   const { connected, setConnected } = useContext(contextTheme);
-  const [toast, setToast] = useState(false);
+  const [toast, setToast] = useState({ status: false, error: "" });
 
   //*Storing Ether information for getting the account ID later on.
   const metaMask = window.ethereum;
+  const mumbai_chainID = metaMask
+    ? metaMask.chainId === "0x13881"
+      ? "network_on"
+      : "network_off"
+    : "install_off";
   const provider = metaMask
     ? new ethers.providers.Web3Provider(metaMask)
     : false;
@@ -157,20 +172,24 @@ export const ConnectWallet = () => {
     if (reason === "clickaway") {
       return;
     }
-    setToast(false);
+    setToast({ status: false, error: toast.error });
   };
 
   //*Checking if window.etherum is detected in the browser (if not then Metamask needs to be installed) & getting Account ID.
   const connectWallet = async (e) => {
     e.preventDefault();
+
     if (typeof metaMask === "undefined") {
-      setToast(true);
-    } else {
+      setToast({ status: true, error: "install" });
+    } else if (mumbai_chainID === "network_off")
+      setToast({ status: true, error: "network" });
+    else {
       const accounts = await metaMask.request({
         method: "eth_requestAccounts",
       });
 
       //*Grabbing Account to use for Token Minting & some added information variables.
+      console.log("accounts", accounts);
       const account = accounts[0];
       const blockNumber = await provider.getBlockNumber();
       const balance = await provider.getBalance(account);
@@ -185,7 +204,7 @@ export const ConnectWallet = () => {
   return (
     <S.WalletConnectContain animation={connected.status ? true : false}>
       <Snackbar
-        open={toast}
+        open={toast.status}
         autoHideDuration={6000}
         onClose={toastClose}
         // anchorOrigin={{
@@ -193,14 +212,28 @@ export const ConnectWallet = () => {
         //   vertical: "bottom",
         // }}
       >
-        <Alert onClose={toastClose} severity="error">
+        <Alert
+          onClose={toastClose}
+          severity={toast.error === "network" ? "info" : "error"}
+        >
           <AlertTitle>
-            Error: MetaMask not detected within the browser.
+            {toast.error === "network"
+              ? "Error: Matic Testnet Mumbai Network Not Selected On MetaMask."
+              : toast.error === "install"
+              ? "Error: MetaMask not detected within the browser."
+              : "Unknown Error.??"}
           </AlertTitle>
 
-          <strong>Please Install Metamask!</strong>
+          <strong>
+            {toast.error === "network"
+              ? "Please Switch Network Type!"
+              : toast.error === "install"
+              ? "Please Install Metamask!"
+              : "Contact Web Dev"}
+          </strong>
         </Alert>
       </Snackbar>
+
       <S.Flex animation={true}>
         <S.WalletConnectText animation={connected.status ? "fadeOutUp2" : ""}>
           Connect

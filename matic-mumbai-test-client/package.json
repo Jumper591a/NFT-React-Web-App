@@ -1,4 +1,5 @@
 {
+  "homepage": "http://DoubleHelixX.github.io/NFT-React-Web-App",
   "name": "matic-mumbai-test-client",
   "version": "0.1.0",
   "private": true,
@@ -22,6 +23,8 @@
     "web-vitals": "^1.0.1"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -47,6 +50,7 @@
   },
   "devDependencies": {
     "babel-plugin-styled-components": "^1.12.0",
+    "gh-pages": "^3.2.3",
     "stylelint": "^13.13.1",
     "stylelint-config-recommended": "^5.0.0",
     "stylelint-config-standard": "^22.0.0"
