@@ -1,12 +1,13 @@
-import { RepeatOneSharp } from "@material-ui/icons";
-import swag_logo_1 from "../images/swag_logo_1.png";
-
+//! Previsouly Required libraies to be installed (not currently using at the moment).
 const axios = require("axios");
 const fs = require("browserify-fs");
 const FormData = require("form-data");
+
+//!Important API Keys for Pinata
 const pinata_api_key = process.env.REACT_APP_PINATA_API_KEY;
 const pinata_secret_api_key = process.env.REACT_APP_PINATA_SECRET_API_KEY;
 
+//*Test connection API for Pinata.
 export const testAuthentication = async () => {
   const url = `https://api.pinata.cloud/data/testAuthentication`;
   return await axios
@@ -26,6 +27,8 @@ export const testAuthentication = async () => {
     });
 };
 
+//!Pinata API for pinning raw read streams to Pinata (Broken until I can figure out a way to streamline data).
+//! Might onlu work with nodeJS.
 export const pinFileToIPFS = (metadata = "", image = "") => {
   const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
   let file;
@@ -83,6 +86,7 @@ export const pinFileToIPFS = (metadata = "", image = "") => {
     });
 };
 
+//* Pinata API for pinning json to Pinata IPFS.
 export const pinJSONToIPFS = async (JSONBody) => {
   const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
 

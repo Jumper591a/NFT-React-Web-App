@@ -1,3 +1,5 @@
+//! Declaring Keyframe animations for export.
+
 import { keyframes } from "styled-components";
 
 export const slideInTop = keyframes`

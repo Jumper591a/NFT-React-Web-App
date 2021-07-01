@@ -1,3 +1,4 @@
+/*! Resetting every element to have no margin (personal preference). */
 * {
   /* padding: 0; */
   margin: 0;
@@ -17,6 +18,7 @@ code {
     monospace;
 }
 
+/** Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Sacramento&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Viaoda+Libre&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
