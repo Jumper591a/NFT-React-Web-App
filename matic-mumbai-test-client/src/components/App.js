@@ -122,7 +122,8 @@ const App = () => {
       connected,
       setNftLoading,
       setFormData,
-      setIpfsData
+      setIpfsData,
+      ipfsData
     );
   };
 

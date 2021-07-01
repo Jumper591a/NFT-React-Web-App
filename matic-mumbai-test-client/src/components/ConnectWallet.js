@@ -189,7 +189,6 @@ export const ConnectWallet = () => {
       });
 
       //*Grabbing Account to use for Token Minting & some added information variables.
-      console.log("accounts", accounts);
       const account = accounts[0];
       const blockNumber = await provider.getBlockNumber();
       const balance = await provider.getBalance(account);

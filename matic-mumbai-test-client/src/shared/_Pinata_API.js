@@ -35,7 +35,6 @@ export const pinFileToIPFS = (metadata = "", image = "") => {
   //we gather a local file for this example, but any valid readStream source will work here.
   let data = new FormData();
   if (image) {
-    console.log(typeof image, "image", image);
     const blob = new Blob(["foo"]);
     const stream = blob.stream();
     const reader = stream.getReader();
@@ -105,7 +104,7 @@ export const pinJSONToIPFS = async (JSONBody) => {
 };
 
 export const retrievePinnedData = async (URL) => {
-  console.log("URL in pin func", URL);
+  // console.log("URL in pin func", URL);
   return await axios.get(URL).catch(function (error) {
     //handle error here
     console.log("JSON pinning error", error);

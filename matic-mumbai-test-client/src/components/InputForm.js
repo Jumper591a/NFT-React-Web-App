@@ -221,7 +221,11 @@ export const InputForm = () => {
     //*Installed React component for grabbing media files from form.
     selectFile({}, ({ source, name, size, file }) => {
       //? file - is the raw File Object
-      console.log({ source, name, size, file });
+      console.log(
+        "Your Uploaded Content: \n",
+        { source, name, size, file },
+        "\n"
+      );
       setFormFile(true);
     });
   };

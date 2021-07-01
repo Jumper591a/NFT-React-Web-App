@@ -108,7 +108,7 @@ export const pinToPinata = async (formData, file) => {
 
   //*Testing IPFS Connection First.
   await testAuthentication().then((res) => {
-    console.log("status", res.status);
+    console.log("Your Connection Status to IPFS is: ", res.status);
     status = res.status;
   });
 
@@ -119,8 +119,7 @@ export const pinToPinata = async (formData, file) => {
 
     //*Finally calling the Pinata API to Pin the formatted metadata.
     await pinJSONToIPFS(metadata).then(function (res) {
-      //handle res here
-      console.log("JSON pinning res", res, "IPFShash", res.data["IpfsHash"]);
+      // console.log("JSON pinning res", res, "IPFShash", res.data["IpfsHash"]);
       result = {
         status: true,
         res: res,
@@ -138,7 +137,8 @@ export const mintToNetwork = async (
   connected,
   setNftLoading,
   setFormData,
-  setIpfsData
+  setIpfsData,
+  ipfsData
 ) => {
   //*Setting up Ether functionality in order to interact with the network.
   const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -217,6 +217,10 @@ export const mintToNetwork = async (
               ? res.data.properties.image.description
               : "",
         });
+        console.log(
+          `Your Token ID is ${minted_token}\nThe retrieved Token URI is ${retrieved_uri}\nAdd the Token to your Meta Wallet => Contract Address: ${CONTRACT_ADDRESS}`
+        );
+        console.log("\nData Retrieved from IPFS: ", ipfsData);
       });
     }, 20000);
   } else console.log("error", res);
