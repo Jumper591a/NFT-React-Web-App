@@ -31,7 +31,6 @@ export const testAuthentication = async () => {
 //! Might onlu work with nodeJS.
 export const pinFileToIPFS = (metadata = "", image = "") => {
   const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
-  let file;
   //we gather a local file for this example, but any valid readStream source will work here.
   let data = new FormData();
   if (image) {

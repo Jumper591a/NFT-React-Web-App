@@ -1,6 +1,13 @@
 //*Importing Ethers from Installed Ethers Libary.
 import { ethers } from "ethers";
 
+import {
+  setIpfsData,
+  setIpfsEmpty,
+  setNftLoading,
+  setLoadingOff,
+} from "../store/index";
+
 //*Importing Constants and Pinata API functions current 'shared' folder.
 import {
   testAuthentication,
@@ -134,15 +141,13 @@ export const pinToPinata = async (formData, file) => {
 export const mintToNetwork = async (
   formData,
   file,
-  connected,
-  setNftLoading,
-  setFormData,
-  setIpfsData,
-  ipfsData
+  connectWallet,
+  ipfsData,
+  nftLoading,
+  dispatch
 ) => {
   //*Setting up Ether functionality in order to interact with the network.
   const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const providerRPC = new ethers.providers.JsonRpcProvider();
   const signer = provider.getSigner();
   const _contract = new ethers.Contract(CONTRACT_ADDRESS, DAI_ABI, provider);
 
@@ -158,37 +163,38 @@ export const mintToNetwork = async (
     const _contract_with_sig = _contract.connect(signer);
 
     //*Minting Token and Assigning Token URI all in one Function.
-    await _contract_with_sig.safeMint(connected.account, URI).then((res) => {
-      // console.log("safe_mint", res);
-    });
+    const mint_contract = await _contract_with_sig.safeMint(
+      connectWallet.account,
+      URI
+    );
+    //! Was testing a wait to get the correct token ID from network after minting.
+    // mint_contract.wait();
+    // console.log("mint_contract", mint_contract);
+    // const total_tokens = await _contract.balanceOf(connectWallet.account);
+    // const last_token_index =
+    //   total_tokens.toNumber() === 0 ? 0 : total_tokens.toNumber() - 1;
+    // const minted_token = await _contract_with_sig.tokenByIndex(
+    //   last_token_index
+    // );
+    // const retrieved_uri = await _contract.tokenURI(minted_token.toNumber());
+    // console.log(
+    //   "minted_token_test",
+    //   minted_token.toNumber(),
+    //   "\nretrieved_uri_Test",
+    //   retrieved_uri
+    // );
 
     //*Starting NFT loading & Resetting data states
-    setNftLoading(true);
-
-    setFormData({
-      swagType: "",
-      nftName: "",
-      nftDescription: "",
-    });
-    setIpfsData({
-      status: false,
-      title: "",
-      description: "",
-      swagType: "",
-      swagScore: "",
-      legacy: "",
-      swagLevel: "",
-      video: "",
-      image: "",
-    });
+    dispatch(setNftLoading());
+    dispatch(setIpfsEmpty());
 
     //!SetTimeOut - needed for getting the latest/correct token ID from the network
     setTimeout(async () => {
       //*Shutting Loading state as Falsy so that Token Propperties begin to display on the page.
-      setNftLoading(false);
+      dispatch(setLoadingOff());
 
       //*Getting the latest Token ID aka the Minted Token we just Minted.
-      const total_tokens = await _contract.balanceOf(connected.account);
+      const total_tokens = await _contract.balanceOf(connectWallet.account);
       const last_token_index =
         total_tokens.toNumber() === 0 ? 0 : total_tokens.toNumber() - 1;
       const minted_token = await _contract_with_sig.tokenByIndex(
@@ -199,9 +205,7 @@ export const mintToNetwork = async (
       //*Retrieving IPFS Data now that we have the IPFS Hash from the Token URI.
       await retrievePinnedData(retrieved_uri).then((res) => {
         // console.log("pinned data", res);
-        //*Setting IPFS State Data with the above result.
-        setIpfsData({
-          status: true,
+        const ipfs_data_format = {
           title: res.data.properties.name.description,
           description: res.data.properties.description.description,
           swagType: res.data.properties.swagType.description,
@@ -216,11 +220,23 @@ export const mintToNetwork = async (
             "image" in res.data.properties
               ? res.data.properties.image.description
               : "",
-        });
+        };
+
+        //*Setting IPFS State Data with the above result.
+        dispatch(setIpfsData(ipfs_data_format));
         console.log(
-          `Your Token ID is ${minted_token}\nThe retrieved Token URI is ${retrieved_uri}\nAdd the Token to your Meta Wallet => Contract Address: ${CONTRACT_ADDRESS}`
+          `
+Your Token ID is ${minted_token}
+
+The retrieved Token URI is ${retrieved_uri}
+
+Add the Token to your Meta Wallet => Contract Address: ${CONTRACT_ADDRESS}
+
+Data Retrieved from IPFS:
+
+${JSON.stringify(res.data, null, "\t")}
+          `
         );
-        console.log("\nData Retrieved from IPFS: ", ipfsData);
       });
     }, 20000);
   } else console.log("error", res);

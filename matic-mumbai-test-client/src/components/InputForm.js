@@ -1,6 +1,16 @@
 //*Importing from React and from installed Styled Components Libary.
-import React, { useContext, useState } from "react";
+import React, { useRef, useState } from "react";
 import styled from "styled-components/macro";
+import { useDispatch, useSelector } from "react-redux";
+
+//? import { CSSTransition } from "react-transition-group"
+
+//* Helper Library for the user to upload media
+import { useFileUpload } from "use-file-upload";
+
+import { mintToNetwork } from "../shared/_HelperFunctions";
+
+import { setFormData, setFormEmpty } from "../store/index";
 
 //*Importing Material-UI components from the Installed Material UI library.
 import TextField from "@material-ui/core/TextField";
@@ -12,7 +22,7 @@ import SearchIcon from "@material-ui/icons/Search";
 import FormControl from "@material-ui/core/FormControl";
 
 //*Importing ContextTheme (to pass state data to components) & Importing Keyframe animations for element effects.
-import { contextTheme } from "../shared/_Constants";
+//? import { contextTheme } from "../shared/_Constants";
 import {
   rubberBand,
   shakeY,
@@ -88,31 +98,46 @@ S.StyledBtn = styled(Button)`
   &.MuiButton-root {
     margin-top: ${(props) => (props.margin ? props.margin : "10px")};
     background-color: #ffffff;
-    border: 2px groove
-      ${(props) => (props.boarderColor ? props.boarderColor : "white")};
+    border: ${(props) =>
+        props.animation !== "shakeY" && props.ready ? "6px double" : "groove"}
+      ${(props) => (props.boardercolor ? props.boardercolor : "white")};
 
     &:hover {
       background-color: #ffffff;
+      border: ${(props) =>
+        props.animation !== "shakeY" && props.ready ? "6px double" : "groove"};
 
+      border-color: ${(props) =>
+        props.boardercolor ? props.boardercolor : "white"};
+
+      animation-name: ${(props) =>
+        props.animation === "shakeY" ? shakeY : ""};
+      transform-origin: center;
+      animation-duration: 1s;
+      animation-timing-function: ease-in-out;
+    }
+
+    &:focus {
+      background-color: #ffffff;
       animation-name: ${(props) =>
         props.animation === "shakeY" ? shakeY : rubberBand};
       transform-origin: center;
       animation-duration: 1s;
       animation-timing-function: ease-in-out;
     }
-    /* align-self: flex-start; */
   }
+
   & > span.MuiButton-label {
     font-weight: ${(props) => (props.bold ? props.bold : "100")};
     color: #440099;
   }
 
   & > span {
-    color: ${(props) => (props.color ? props.color : "black")};
+    color: ${(props) => (props.btncolor ? props.btncolor : "black")};
   }
   & > span:nth-child(2) {
     border: 2px inset
-      ${(props) => (props.borderColor ? props.borderColor : "transparent")};
+      ${(props) => (props.bordercolor ? props.bordercolor : "transparent")};
   }
 
   & > span {
@@ -211,8 +236,37 @@ S.FormControl = styled(FormControl)`
 
 export const InputForm = () => {
   //*Getting important state data via ContextTheme.
-  const { mint, formData, setFormData, selectFile, file } =
-    useContext(contextTheme);
+  // const { mint, formData, setFormData, selectFile, file } =
+  //   useContext(contextTheme);
+  const dispatch = useDispatch();
+  const connectWallet = useSelector((state) => state.connectWallet);
+  const formData = useSelector((state) => state.formData);
+  const ipfsData = useSelector((state) => state.ipfsData);
+  const nftLoading = useSelector((state) => state.nftLoading);
+
+  const [name, setName] = useState("");
+  const [swag, setSwag] = useState("");
+  const [desc, setDesc] = useState("");
+
+  const [media, setMedia] = useState(false);
+  const [formFile, setFormFile] = useState(false);
+
+  //*State management for activating with the installed helper react component for
+  //*grabbing user submitted media data.
+  const [file, selectFile] = useFileUpload();
+
+  const dropdownRef = useRef({ value: "" });
+
+  const handleDropDown = (e) => {
+    dispatch(
+      setFormData({
+        swagType: e.target.value,
+        nftName: formData.nftName,
+        nftDescription: formData.nftDescription,
+      })
+    );
+    dropdownRef.current.value = e.target.value;
+  };
 
   //*Helper Function for collecting user Media data from input form submission.
   const BrowseMedia = (e) => {
@@ -230,8 +284,18 @@ export const InputForm = () => {
     });
   };
 
-  const [media, setMedia] = useState(false);
-  const [formFile, setFormFile] = useState(false);
+  //*Function for Minting token onto the network.
+  const mint = async () => {
+    mintToNetwork(
+      formData,
+      file,
+      connectWallet,
+      ipfsData,
+      nftLoading,
+      dispatch
+    );
+    setFormFile(false);
+  };
 
   return (
     <S.FormInput>
@@ -247,37 +311,36 @@ export const InputForm = () => {
         value={formData.nftName}
         variant="outlined"
         onChange={(event) =>
-          setFormData({
-            swagType: formData.swagType,
-            nftName: event.target.value,
-            nftDescription: formData.nftDescription,
-          })
+          dispatch(
+            setFormData({
+              swagType: formData.swagType,
+              nftName: event.target.value,
+              nftDescription: formData.nftDescription,
+            })
+          )
         }
         error={media && !formData.nftName ? true : false}
         helperText={
           media && !formData.nftName ? "Give the NFT a Name Property" : ""
         }
       />
-
       <S.FormControl variant="outlined">
-        <InputLabel
-          id="demo-simple-select-outlined-label"
-          error={media && !formData.swagType ? true : false}
-        >
+        <InputLabel error={media && !formData.swagType ? true : false}>
           {media && !formData.swagType
             ? "Give the NFT a Swag Type Property"
             : "Swag Type"}
         </InputLabel>
         <Select
-          labelId="demo-simple-select-outlined-label"
-          id="demo-simple-select-outlined"
+          ref={dropdownRef}
           value={formData.swagType}
           onChange={(event) =>
-            setFormData({
-              swagType: event.target.value,
-              nftName: formData.nftName,
-              nftDescription: formData.nftDescription,
-            })
+            dispatch(
+              setFormData({
+                swagType: event.target.value,
+                nftName: formData.nftName,
+                nftDescription: formData.nftDescription,
+              })
+            )
           }
           label="Swag Type"
         >
@@ -296,15 +359,16 @@ export const InputForm = () => {
         label="Description"
         multiline
         rows={4}
-        defaultValue=""
         value={formData.nftDescription}
         variant="outlined"
         onChange={(event) =>
-          setFormData({
-            swagType: formData.swagType,
-            nftName: formData.nftName,
-            nftDescription: event.target.value,
-          })
+          dispatch(
+            setFormData({
+              swagType: formData.swagType,
+              nftName: formData.nftName,
+              nftDescription: event.target.value,
+            })
+          )
         }
         error={media && !formData.nftDescription ? true : false}
         helperText={
@@ -319,8 +383,8 @@ export const InputForm = () => {
         startIcon={<SearchIcon />}
         animation="shakeY"
         margin=""
-        borderColor="white"
-        color="#440099"
+        bordercolor="white"
+        btncolor="#440099"
         onClick={(event) => {
           BrowseMedia(event);
           // setMedia(!media);
@@ -344,27 +408,21 @@ export const InputForm = () => {
         </S.FileDetailsBox>
       ) : (
         <S.FileDetailsBox>
-          <S.FileDetails animation={media && !file ? true : false}>
+          <S.FileDetails animation={media && !formFile ? "true" : ""}>
             🔍🤔 Attach a media source ? . . .
           </S.FileDetails>
         </S.FileDetailsBox>
       )}
 
-      <S.FileDetailsBox
-        margin={
-          media && (!formData.nftName || !formData.nftDescription)
-            ? "30px"
-            : "60px"
-        }
-      >
+      <S.FileDetailsBox margin={"30px"}>
         <S.FileDetails
           animation={
             formFile &&
             formData.swagType &&
             formData.nftName &&
             formData.nftDescription
-              ? true
-              : false
+              ? "true"
+              : ""
           }
         >
           ⮷ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;
@@ -378,20 +436,37 @@ export const InputForm = () => {
         color="primary"
         href="#outlined-S.StyledBtns"
         animation="rubberBand"
+        ready={
+          formFile &&
+          formData.swagType &&
+          formData.nftName &&
+          formData.nftDescription
+            ? "true"
+            : ""
+        }
         bold="bolder"
-        boarderColor="#440099"
+        boardercolor="#440099"
         onClick={(event) => {
           event.preventDefault();
           setMedia(true);
           if (
-            file &&
+            formFile &&
             formData.swagType &&
             formData.nftName &&
             formData.nftDescription
           ) {
-            setFormFile(false);
             setMedia(false);
+            dispatch(setFormEmpty());
+            dropdownRef.current.value = "";
             mint();
+          } else {
+            console.log(
+              formFile,
+              media,
+              formData.swagType,
+              formData.nftName,
+              formData.nftDescription
+            );
           }
         }}
       >
@@ -405,8 +480,8 @@ export const InputForm = () => {
             formData.swagType &&
             formData.nftName &&
             formData.nftDescription
-              ? true
-              : false
+              ? "true"
+              : ""
           }
         >
           ⮵ &nbsp; <span>Mint when you are ready</span> &nbsp; ⮴

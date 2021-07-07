@@ -1,6 +1,7 @@
 //*Importing from React and from installed Styled Components Libary.
-import React, { useContext } from "react";
+import React from "react";
 import styled from "styled-components/macro";
+import { useSelector } from "react-redux";
 
 //*Importing Swag Logo Header & animations from _Keyframes file.
 import swag_logo_1 from "../images/swag_logo_1.png";
@@ -11,7 +12,7 @@ import Button from "@material-ui/core/Button";
 import Tooltip from "@material-ui/core/Tooltip";
 
 //*Importing ContextTheme (to pass state data to components).
-import { contextTheme } from "../shared/_Constants";
+//? import { contextTheme } from "../shared/_Constants";
 
 //*Setting Styled Components.
 const S = {};
@@ -61,23 +62,21 @@ S.Tooltip = styled(Tooltip)``;
 
 export const Header = () => {
   //*Getting important state data via ContextTheme.
-  const connected = useContext(contextTheme);
+
+  const { status, account } = useSelector((state) => state.connectWallet);
 
   return (
     <S.Header>
-      <S.HeaderLogo
-        src={swag_logo_1}
-        animation={connected.status ? true : false}
-      />
+      <S.HeaderLogo src={swag_logo_1} animation={status ? "true" : ""} />
       <S.Tooltip
         disableFocusListener
         disableTouchListener
-        title={`Account: ${connected.account}`}
+        title={`Account: ${account}`}
       >
         <S.Button
-          animation={connected.status ? true : false}
+          animation={status ? "true" : ""}
           disableRipple
-          display={connected.status ? "inline!important" : "none!important"}
+          display={status ? "inline!important" : "none!important"}
         >
           Connected
         </S.Button>

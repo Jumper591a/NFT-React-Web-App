@@ -1,9 +1,12 @@
 //*Importing from React and from installed Styled Components Libary.
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React from "react";
 import styled from "styled-components/macro";
 
+import { useSelector } from "react-redux";
+
 //*Importing from shared folder
-import { contextTheme } from "../shared/_Constants";
+//? import { contextTheme } from "../shared/_Constants";
+
 import {
   three,
   colorRotate,
@@ -15,8 +18,6 @@ import {
 //*Installed React Components.
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import VideoLooper from "react-video-looper";
-
-import swag_logo_1 from "../images/swag_logo_1.png";
 
 //*Setting Styled Components.
 const S = {};
@@ -165,7 +166,9 @@ S.NftImage = styled.img`
 
 export const ResultForm = () => {
   //*Context Theme passing data here.
-  const { nftLoading, ipfsData } = useContext(contextTheme);
+  // const { nftLoading, ipfsData } = useContext(contextTheme);
+  const ipfsData = useSelector((state) => state.ipfsData);
+  const nftLoading = useSelector((state) => state.nftLoading);
 
   //*Helper Function for displaying Count down timer correctly.
   const renderTime = ({ remainingTime }) => {

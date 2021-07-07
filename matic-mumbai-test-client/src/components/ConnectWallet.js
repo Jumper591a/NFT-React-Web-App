@@ -1,9 +1,14 @@
 //*Importing from React and from installed Styled Components Libary.
-import React, { useContext, useState } from "react";
+//? import React, { useContext, useState } from "react";
+import React, { useState } from "react";
+
 import styled from "styled-components/macro";
+import { useDispatch, useSelector } from "react-redux";
+
+import { activate } from "../store/index";
 
 //*Importing Ethers from Installed Ethers Libary.
-import { ethers } from "ethers";
+//? import { ethers } from "ethers";
 
 //*Importing Ethers from Installed Ethers Libary.
 import Avatar from "@material-ui/core/Avatar";
@@ -12,14 +17,14 @@ import { Alert, AlertTitle } from "@material-ui/lab";
 import Snackbar from "@material-ui/core/Snackbar";
 
 //*Importing ContextTheme (to pass state data to components) & Importing Keyframe animations for element effects.
-import { contextTheme } from "../shared/_Constants";
+//? import { contextTheme } from "../shared/_Constants";
+
 import {
   jello,
   rotateOut,
   fadeIn,
   fadeOutUp2,
   hidden,
-  rollIn,
 } from "../shared/_Keyframes";
 
 //*Setting Styled Components.
@@ -152,9 +157,13 @@ S.WalletConnectText = styled.p`
 `;
 
 export const ConnectWallet = () => {
+  const dispatch = useDispatch();
+
   //*Getting important state data via ContextTheme.
-  const { connected, setConnected } = useContext(contextTheme);
+  //? const { connected, setConnected } = useContext(contextTheme);
+
   const [toast, setToast] = useState({ status: false, error: "" });
+  const { status } = useSelector((state) => state.connectWallet);
 
   //*Storing Ether information for getting the account ID later on.
   const metaMask = window.ethereum;
@@ -163,10 +172,8 @@ export const ConnectWallet = () => {
       ? "network_on"
       : "network_off"
     : "install_off";
-  const provider = metaMask
-    ? new ethers.providers.Web3Provider(metaMask)
-    : false;
-  const providerRPC = new ethers.providers.JsonRpcProvider();
+
+  //? const providerRPC = new ethers.providers.JsonRpcProvider();
 
   const toastClose = (event, reason) => {
     if (reason === "clickaway") {
@@ -190,18 +197,19 @@ export const ConnectWallet = () => {
 
       //*Grabbing Account to use for Token Minting & some added information variables.
       const account = accounts[0];
-      const blockNumber = await provider.getBlockNumber();
-      const balance = await provider.getBalance(account);
-      const bigNumberFormatter = ethers.utils.formatEther(balance);
-      const userInputFormatted = ethers.utils.parseEther("1.0");
+      //? const blockNumber = await provider.getBlockNumber();
+      //? const balance = await provider.getBalance(accounts[0]);
+      //? const bigNumberFormatter = ethers.utils.formatEther(balance);
+      //? const userInputFormatted = ethers.utils.parseEther("1.0");
 
       //*Setting Connected State with true and the metamask Account ID.
-      setConnected({ status: true, account: account });
+      // setConnected({ status: true, account: account });
+      dispatch(activate(account));
     }
   };
 
   return (
-    <S.WalletConnectContain animation={connected.status ? true : false}>
+    <S.WalletConnectContain animation={status ? "true" : ""}>
       <Snackbar
         open={toast.status}
         autoHideDuration={6000}
@@ -234,17 +242,17 @@ export const ConnectWallet = () => {
       </Snackbar>
 
       <S.Flex animation={true}>
-        <S.WalletConnectText animation={connected.status ? "fadeOutUp2" : ""}>
+        <S.WalletConnectText animation={status ? "fadeOutUp2" : ""}>
           Connect
         </S.WalletConnectText>
         <S.WalletConnectAvatar
-          animation={!connected.status ? "fadeIn" : "rotateOut"}
+          animation={!status ? "fadeIn" : "rotateOut"}
           onClick={(event) => connectWallet(event)}
           tabIndex={1}
         >
           <S.VpnKeyTwoToneIcon />
         </S.WalletConnectAvatar>
-        <S.WalletConnectText animation={connected.status ? "fadeOutUp2" : ""}>
+        <S.WalletConnectText animation={status ? "fadeOutUp2" : ""}>
           Wallet
         </S.WalletConnectText>
       </S.Flex>

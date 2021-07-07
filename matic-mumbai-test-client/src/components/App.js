@@ -1,14 +1,15 @@
 //*Importing from React and from installed Styled Components Libary.
-import React, { useState, useEffect, useRef } from "react";
-import styled, { css } from "styled-components/macro";
+// import React, { useState, useEffect, useRef } from "react";
+// import styled, { css } from "styled-components/macro";
+import React from "react";
+import styled from "styled-components/macro";
 
-import { useFileUpload } from "use-file-upload";
+import { useSelector } from "react-redux";
 
 //*Importing ContextTheme(for passing data to other components), animations,
 //*and helper functions from shared folder.
-import { contextTheme } from "../shared/_Constants";
+// import { contextTheme } from "../shared/_Constants";
 import { ZoomIn } from "../shared/_Keyframes";
-import { mintToNetwork } from "../shared/_HelperFunctions";
 
 //*Importing Functional Components to build page.
 import { Header } from "./Header";
@@ -90,68 +91,26 @@ S.FlexContainer = styled.div`
 `;
 
 const App = () => {
-  //*Setting State for key logic to running the web application.
-  const [connected, setConnected] = useState({ status: false, account: "" });
-  const [formData, setFormData] = useState({
-    swagType: "",
-    nftName: "",
-    nftDescription: "",
-  });
-  const [ipfsData, setIpfsData] = useState({
-    status: false,
-    title: "",
-    description: "",
-    swagType: "",
-    swagScore: "",
-    legacy: "",
-    swagLevel: "",
-    video: "",
-    image: "",
-  });
-  const [nftLoading, setNftLoading] = useState(false);
-
-  //*State management for activating with the installed helper react component for
-  //*grabbing user submitted media data.
-  const [file, selectFile] = useFileUpload();
-
-  //*Function for Minting token onto the network.
-  const mint = async () => {
-    mintToNetwork(
-      formData,
-      file,
-      connected,
-      setNftLoading,
-      setFormData,
-      setIpfsData,
-      ipfsData
-    );
-  };
-
   //!Declaring Variables for passing via ContextTheme to other react components.
-  const context_input_form = { mint, formData, setFormData, file, selectFile };
-  const connection = { connected, setConnected };
-  const context_result_form = { ipfsData, nftLoading };
+  // const context_input_form = { mint, formData, setFormData, file, selectFile };
+  // const context_result_form = { ipfsData, nftLoading };
+
+  const { status } = useSelector((state) => state.connectWallet);
 
   return (
     <S.AppContainer>
       <PageLoader />
+      <Header />
+      <ConnectWallet />
 
-      <contextTheme.Provider value={connected}>
-        <Header />
-      </contextTheme.Provider>
+      <S.FlexContainer animation={status ? "ZoomIn" : ""}>
+        {/* <contextTheme.Provider value={context_input_form}> */}
+        <InputForm />
+        {/* </contextTheme.Provider> */}
 
-      <contextTheme.Provider value={connection}>
-        <ConnectWallet />
-      </contextTheme.Provider>
-
-      <S.FlexContainer animation={connected.status ? "ZoomIn" : ""}>
-        <contextTheme.Provider value={context_input_form}>
-          <InputForm />
-        </contextTheme.Provider>
-
-        <contextTheme.Provider value={context_result_form}>
-          <ResultForm />
-        </contextTheme.Provider>
+        {/* <contextTheme.Provider value={context_result_form}> */}
+        <ResultForm />
+        {/* </contextTheme.Provider> */}
       </S.FlexContainer>
     </S.AppContainer>
   );

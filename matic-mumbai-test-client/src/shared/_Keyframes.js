@@ -656,17 +656,20 @@ from {
 
 export const lightSpeedInLeft = keyframes`
   from {
-    transform: translate3d(-100%, 0, 0) skewX(30deg);
+    transform: translate3d(-20%, 0, 0) skewX(30deg);
     opacity: 0;
   }
 
   60% {
     transform: skewX(-20deg);
+    transform: translate3d(5%, 0, 0);
+
     opacity: 1;
   }
 
   80% {
     transform: skewX(5deg);
+
   }
 
   to {
