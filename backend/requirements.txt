@@ -1,0 +1,4 @@
+1. install MongoDB => MongoDB-Community-Server : https://www.mongodb.com/try/download/community
+2. Create package.json => npm init -y
+3. Install mongoose and express => npm install express mongoose
+4. install nodemon => npm install nodemon -D : nodemon is a tool that helps develop node.js based applications by automatically restarting the node application when file changes in the directory are detected.
