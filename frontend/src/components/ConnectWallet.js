@@ -2,6 +2,8 @@
 //? import React, { useContext, useState } from "react";
 import React, { useState } from "react";
 
+import { setNetwork } from "../store/index";
+
 import styled from "styled-components/macro";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -51,7 +53,7 @@ S.WalletConnectContain = styled.span`
     color: #333333;
   }
 
-  & ..MuiAlert-standardError .MuiTypography-root {
+  & .MuiAlert-standardError .MuiTypography-root {
     color: #fc3390;
   }
 
@@ -167,8 +169,8 @@ export const ConnectWallet = () => {
 
   //*Storing Ether information for getting the account ID later on.
   const metaMask = window.ethereum;
-  const mumbai_chainID = metaMask
-    ? metaMask.chainId === "0x13881"
+  const network_chainId_status = metaMask
+    ? metaMask.chainId === "0x13881" || metaMask.chainId === "0x4"
       ? "network_on"
       : "network_off"
     : "install_off";
@@ -188,7 +190,7 @@ export const ConnectWallet = () => {
 
     if (typeof metaMask === "undefined") {
       setToast({ status: true, error: "install" });
-    } else if (mumbai_chainID === "network_off")
+    } else if (network_chainId_status === "network_off")
       setToast({ status: true, error: "network" });
     else {
       const accounts = await metaMask.request({
@@ -204,6 +206,9 @@ export const ConnectWallet = () => {
 
       //*Setting Connected State with true and the metamask Account ID.
       // setConnected({ status: true, account: account });
+      const network_type =
+        metaMask.chainId === "0x13881" ? "matic_test" : "rinkeby_test";
+      dispatch(setNetwork(network_type));
       dispatch(activate(account));
     }
   };
@@ -225,7 +230,7 @@ export const ConnectWallet = () => {
         >
           <AlertTitle>
             {toast.error === "network"
-              ? "Error: Matic Testnet Mumbai Network Not Selected On MetaMask."
+              ? "Error: Matic Testnet Mumbai Network or Rinkeby Network Not Selected On MetaMask."
               : toast.error === "install"
               ? "Error: MetaMask not detected within the browser."
               : "Unknown Error.??"}

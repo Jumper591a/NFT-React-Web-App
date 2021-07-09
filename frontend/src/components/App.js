@@ -1,10 +1,12 @@
 //*Importing from React and from installed Styled Components Libary.
 // import React, { useState, useEffect, useRef } from "react";
 // import styled, { css } from "styled-components/macro";
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components/macro";
 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+
+import { setNetwork } from "../store/index";
 
 //*Importing ContextTheme(for passing data to other components), animations,
 //*and helper functions from shared folder.
@@ -17,6 +19,10 @@ import { PageLoader } from "./PageLoader";
 import { ConnectWallet } from "./ConnectWallet";
 import { InputForm } from "./InputForm";
 import { ResultForm } from "./ResultForm";
+
+//*
+import { Alert, AlertTitle } from "@material-ui/lab";
+import Snackbar from "@material-ui/core/Snackbar";
 
 //*Importing Index.js because its the only way I know of importing Google fonts.
 import "../index.css";
@@ -89,6 +95,40 @@ S.FlexContainer = styled.div`
     justify-content: center;
   }
 `;
+S.Error = styled.div`
+  /* border: 2px red solid; */
+  display: ${(props) => (props.status ? "inline" : "none")};
+
+  & .MuiAlert-standardError {
+    color: white;
+    background-color: #333333;
+  }
+
+  & .MuiAlert-standardInfo {
+    color: #333333;
+  }
+
+  & .MuiAlert-standardError .MuiTypography-root {
+    color: #fc3390;
+  }
+
+  & .MuiAlert-standardInfo .MuiTypography-root {
+    color: rgb(13, 60, 97);
+  }
+
+  & .MuiSnackbar-anchorOriginBottomCenter {
+    /* bottom: 50vh; */
+    width: 100%;
+  }
+
+  & .MuiAlert-root {
+    font-size: 0.875rem;
+  }
+  & .MuiAlert-standardError .MuiAlert-icon path {
+    color: red;
+    /* stroke: red; */
+  }
+`;
 
 const App = () => {
   //!Declaring Variables for passing via ContextTheme to other react components.
@@ -97,11 +137,63 @@ const App = () => {
 
   const { status } = useSelector((state) => state.connectWallet);
 
+  const dispatch = useDispatch();
+
+  const metaMask = window.ethereum;
+  const [toast, setToast] = useState(false);
+
+  const toastClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setToast(false);
+  };
+
+  metaMask.on("chainChanged", (chainId) => {
+    // Handle the new chain.
+    // Correctly handling chain changes can be complicated.
+    // We recommend reloading the page unless you have good reason not to.
+    // window.location.reload();
+    setToast(false);
+    if (chainId === "0x13881") dispatch(setNetwork("matic_test"));
+    else if (chainId === "0x4") dispatch(setNetwork("rinkeby_test"));
+    else {
+      dispatch(setNetwork(""));
+      setToast(true);
+    }
+    console.log("onchange", chainId);
+  });
+
   return (
     <S.AppContainer>
       <PageLoader />
       <Header />
       <ConnectWallet />
+      <S.Error status={status ? "1" : ""}>
+        <Snackbar
+          open={toast}
+          autoHideDuration={10000}
+          onClose={toastClose}
+          // anchorOrigin={{
+          //   horizontal: "center",
+          //   vertical: "bottom",
+          // }}
+        >
+          <Alert onClose={toastClose} severity="info">
+            <AlertTitle>
+              {
+                "Error: Rinkeby or Mumbai is not selected as network on Metamask extension."
+              }
+            </AlertTitle>
+
+            <strong>
+              {
+                "Make sure Rinkeby or Mumbai Network is selected on MetaMask Extension!"
+              }
+            </strong>
+          </Alert>
+        </Snackbar>
+      </S.Error>
 
       <S.FlexContainer animation={status ? "ZoomIn" : ""}>
         {/* <contextTheme.Provider value={context_input_form}> */}

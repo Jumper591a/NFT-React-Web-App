@@ -54,6 +54,7 @@ S.Button = styled(Button)`
   animation-timing-function: ease-in-out;
   animation-iteration-count: 1;
   animation-fill-mode: forwards;
+  cursor: help !important;
   @media screen and (max-width: 699.667px) {
     margin-top: 10px !important;
   }

@@ -90,19 +90,11 @@ export const heartBeat = keyframes`
       transform: scale(1);
     }
 
-    14% {
+    50% {
       transform: scale(1.3);
     }
 
-    28% {
-      transform: scale(1);
-    }
-
-    42% {
-      transform: scale(1.3);
-    }
-
-    70% {
+    100% {
       transform: scale(1);
     }
     `;

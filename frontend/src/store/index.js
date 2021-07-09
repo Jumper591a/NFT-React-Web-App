@@ -101,16 +101,29 @@ export const nftLoading = createSlice({
   },
 });
 
+export const network = createSlice({
+  name: "network",
+  initialState: { status: false, type: "" },
+  reducers: {
+    setNetwork: (state, { payload }) => {
+      state.status = true;
+      state.type = payload;
+    },
+  },
+});
+
 export const { activate, deactivate } = connectWallet.actions;
 export const { setFormData, setFormEmpty } = formData.actions;
 export const { setIpfsData, setIpfsEmpty } = ipfsData.actions;
 export const { setNftLoading, setLoadingOff } = nftLoading.actions;
+export const { setNetwork } = network.actions;
 
 const __reducers = {
   connectWallet: connectWallet.reducer,
   formData: formData.reducer,
   ipfsData: ipfsData.reducer,
   nftLoading: nftLoading.reducer,
+  network: network.reducer,
 };
 
 const middleware = [...getDefaultMiddleware(), logger];

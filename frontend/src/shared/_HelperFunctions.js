@@ -14,7 +14,7 @@ import {
   pinJSONToIPFS,
   retrievePinnedData,
 } from "./_Pinata_API";
-import { CONTRACT_ADDRESS, DAI_ABI } from "./_Constants";
+import { DAI_ABI } from "./_Constants";
 
 //*Helper function for formatting the metadata to be stored in IPFS.
 export const formatMetadata = (formData, file) => {
@@ -144,12 +144,13 @@ export const mintToNetwork = async (
   connectWallet,
   ipfsData,
   nftLoading,
-  dispatch
+  dispatch,
+  network
 ) => {
   //*Setting up Ether functionality in order to interact with the network.
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
-  const _contract = new ethers.Contract(CONTRACT_ADDRESS, DAI_ABI, provider);
+  const _contract = new ethers.Contract(network, DAI_ABI, provider);
 
   //*Calling Helper function to start the pinning process and waiting for a successful response.
   const res = await pinToPinata(formData, file);
@@ -230,7 +231,7 @@ Your Token ID is ${minted_token}
 
 The retrieved Token URI is ${retrieved_uri}
 
-Add the Token to your Meta Wallet => Contract Address: ${CONTRACT_ADDRESS}
+Add the Token to your Meta Wallet => Contract Address: ${network}
 
 Data Retrieved from IPFS:
 

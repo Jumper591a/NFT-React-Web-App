@@ -5,6 +5,11 @@ import { useDispatch, useSelector } from "react-redux";
 
 //? import { CSSTransition } from "react-transition-group"
 
+import {
+  CONTRACT_ADDRESS_MATIC_TEST,
+  CONTRACT_ADDRESS_RINKEBY_TEST,
+} from "../shared/_Constants";
+
 //* Helper Library for the user to upload media
 import { useFileUpload } from "use-file-upload";
 
@@ -28,6 +33,7 @@ import {
   shakeY,
   fadeInUp2,
   colorRotate,
+  heartBeat,
 } from "../shared/_Keyframes";
 
 //*Setting Styled Components.
@@ -58,6 +64,11 @@ S.FormTitle = styled.h2`
   margin-top: ${(props) => (props.marginTop ? props.marginTop : "")};
   font-size: ${(props) => (props.fontSize ? props.fontSize : "35px")};
   font-family: "Montserrat", sans-serif;
+  animation-name: ${(props) => (props.animation ? heartBeat : "")};
+  transform-origin: center;
+  animation-duration: 1.3s;
+  animation-timing-function: ease;
+  animation-iteration-count: infinite;
 `;
 
 S.TextField = styled(TextField)`
@@ -240,6 +251,8 @@ export const InputForm = () => {
   //   useContext(contextTheme);
   const dispatch = useDispatch();
   const connectWallet = useSelector((state) => state.connectWallet);
+  const { type } = useSelector((state) => state.network);
+
   const formData = useSelector((state) => state.formData);
   const ipfsData = useSelector((state) => state.ipfsData);
   const nftLoading = useSelector((state) => state.nftLoading);
@@ -286,21 +299,46 @@ export const InputForm = () => {
 
   //*Function for Minting token onto the network.
   const mint = async () => {
-    mintToNetwork(
-      formData,
-      file,
-      connectWallet,
-      ipfsData,
-      nftLoading,
-      dispatch
-    );
-    setFormFile(false);
+    if (type === "matic_test") {
+      mintToNetwork(
+        formData,
+        file,
+        connectWallet,
+        ipfsData,
+        nftLoading,
+        dispatch,
+        CONTRACT_ADDRESS_MATIC_TEST
+      );
+      setFormFile(false);
+    } else if (type === "rinkeby_test") {
+      mintToNetwork(
+        formData,
+        file,
+        connectWallet,
+        ipfsData,
+        nftLoading,
+        dispatch,
+        CONTRACT_ADDRESS_RINKEBY_TEST
+      );
+      setFormFile(false);
+    }
   };
 
   return (
     <S.FormInput>
-      <S.FormTitle fontSize="15px" marginTop="20px">
-        Matic-Mumbai Test Network
+      <S.FormTitle
+        fontSize="15px"
+        marginTop="20px"
+        animation={!type ? "1" : ""}
+      >
+        {!type && (
+          <strong>😱 Wrong Network Type Selected on Metamask! 😱 </strong>
+        )}
+        {type
+          ? type === "rinkeby_test"
+            ? "Rinkeby Test Network"
+            : "Matic-Mumbai Test Network"
+          : ""}
       </S.FormTitle>
 
       <S.FormTitle>Mint your NFT</S.FormTitle>
@@ -453,7 +491,8 @@ export const InputForm = () => {
             formFile &&
             formData.swagType &&
             formData.nftName &&
-            formData.nftDescription
+            formData.nftDescription &&
+            type
           ) {
             setMedia(false);
             dispatch(setFormEmpty());

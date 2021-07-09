@@ -3,7 +3,10 @@
 import { createContext } from "react";
 
 //! Declaring Contract Address and Context Theme.
-export const CONTRACT_ADDRESS = "0xD96071361bc375F34B6D6b6732c4c8033F5eba93";
+export const CONTRACT_ADDRESS_MATIC_TEST =
+  "0xD96071361bc375F34B6D6b6732c4c8033F5eba93";
+export const CONTRACT_ADDRESS_RINKEBY_TEST =
+  "0xC94CA2FA89aF6274A088c0B59068c3473A1173E2";
 export const contextTheme = createContext(null);
 
 //! Declaring Contract ABI (Found in Solidity Artifacts Folder).
