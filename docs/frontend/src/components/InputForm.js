@@ -342,7 +342,7 @@ export const InputForm = () => {
           type === "rinkeby_test"
             ? "yellow"
             : type === "matic_test"
-            ? "#3932FC  "
+            ? "yellow"
             : "#333"
         }
         fontSize="15px"

@@ -36,10 +36,15 @@ S.HeaderLogo = styled.img`
   transform-origin: center;
   animation-duration: 0.9s;
   animation-timing-function: ease-in-out;
-  margin-left: 180px;
-  @media screen and (max-width: 1105px) {
+  margin-left: ${(props) => (props.margin ? "0px" : "180px")};
+
+  @media screen and (max-width: 1144px) {
     margin-left: 0px;
-    margin-right: 74px;
+    margin-right: 100px;
+  }
+  @media screen and (max-width: 699.667px) {
+    margin-left: 0px;
+    margin-right: 0px;
   }
   /* background-color: #333333; */
 `;
@@ -62,6 +67,7 @@ S.Button = styled(Button)`
   cursor: help !important;
   @media screen and (max-width: 699.667px) {
     margin-top: 10px !important;
+    margin-left: 170px !important;
   }
 `;
 S.Tooltip = styled(Tooltip)``;
@@ -70,7 +76,7 @@ S.WalletTip = styled.h5`
   font-size: 12px;
   position: relative;
   /* right: 140px; */
-  @media screen and (max-width: 1105px) {
+  @media screen and (max-width: 1144px) {
     display: none;
   }
 `;
@@ -101,7 +107,11 @@ export const Header = () => {
         </S.Button>
       </S.Tooltip>
       <S.Flex>
-        <S.HeaderLogo src={swag_logo_1} animation={status ? "true" : ""} />
+        <S.HeaderLogo
+          src={swag_logo_1}
+          animation={status ? "true" : ""}
+          margin={status ? "1" : ""}
+        />
 
         <S.WalletTip>⏫ Switch Network Type with Metamask ⏫ </S.WalletTip>
       </S.Flex>
