@@ -4,7 +4,10 @@ __pycache__/
 *$py.class
 
 #backend folder
+backend/
 /backend
+backend
+
 
 
 # C extensions
