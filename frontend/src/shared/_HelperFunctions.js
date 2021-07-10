@@ -1,6 +1,8 @@
 //*Importing Ethers from Installed Ethers Libary.
 import { ethers } from "ethers";
 
+import { create } from "ipfs-http-client";
+
 import {
   setIpfsData,
   setIpfsEmpty,
@@ -12,12 +14,13 @@ import {
 import {
   testAuthentication,
   pinJSONToIPFS,
+  pinHashToIPFS,
   retrievePinnedData,
 } from "./_Pinata_API";
 import { DAI_ABI } from "./_Constants";
 
 //*Helper function for formatting the metadata to be stored in IPFS.
-export const formatMetadata = (formData, file) => {
+export const formatMetadata = (formData, path, file) => {
   //*Defining some properties I want the token to have.
   const swagLevel = "Ice";
   const legacy = "Rockstar, [GOAT]";
@@ -27,11 +30,15 @@ export const formatMetadata = (formData, file) => {
 
   let metadata = {
     title: formData.nftName,
+    image: `ipfs://${path}`,
+    imageUrl: `https://gateway.pinata.cloud/ipfs/${path}`,
+    image_author: "",
+    image_type: fileType,
     name: "TestCoin",
     description: formData.nftDescription,
     swagType: formData.swagType,
     swagScore: swagScore,
-    Legacy: legacy,
+    legacy: legacy,
     swagLevel: swagLevel,
     fileSize: fileSize,
     type: "object",
@@ -44,6 +51,11 @@ export const formatMetadata = (formData, file) => {
         type: "string",
         description: formData.nftDescription,
       },
+      image: {
+        type: "string",
+        description: `ipfs://${path}`,
+      },
+
       swagType: {
         type: "string",
         description: formData.swagType,
@@ -66,7 +78,7 @@ export const formatMetadata = (formData, file) => {
       },
       preview_media_file: {
         type: "string",
-        description: "https://gateway.pinata.cloud/ipfs/",
+        description: `https://gateway.pinata.cloud/ipfs/${path}`,
       },
       created_at: {
         type: "datetime",
@@ -84,34 +96,13 @@ export const formatMetadata = (formData, file) => {
     },
   };
 
-  //*Assigning additional properties depening if its a video or a image media source.
-  if (file.file.type.includes("video")) {
-    metadata.video = file;
-    metadata.videoUrl = "https://gateway.pinata.cloud/ipfs/";
-    metadata.properties.video = {
-      type: "string",
-      description: file.source,
-    };
-    metadata.properties.video_author = "";
-  }
-
-  //*Assigning additional properties depening if its a video or a image media source.
-  else if (file.file.type.includes("image")) {
-    metadata.image = file.source;
-    metadata.imageUrl = "https://gateway.pinata.cloud/ipfs/";
-    metadata.properties.image = {
-      type: "string",
-      description: file.source,
-    };
-    metadata.properties.image_author = "";
-  }
   return metadata;
 };
 
 //*Helper Function for Pinning metadata to IPFS.
-export const pinToPinata = async (formData, file) => {
+export const pinToPinata = async (formData, file, buffer) => {
   let status = 0;
-  let result = {};
+  let result = { status: false };
 
   //*Testing IPFS Connection First.
   await testAuthentication().then((res) => {
@@ -121,9 +112,17 @@ export const pinToPinata = async (formData, file) => {
 
   //*If test connection to IPFS is successful then proceed.
   if (file && status === 200) {
-    //*Formatting metadata with helper function described above .
-    const metadata = formatMetadata(formData, file);
+    const ipfs = create({
+      host: "ipfs.infura.io",
+      port: 5001,
+      protocol: "https",
+    });
 
+    const { path } = await ipfs.add(buffer);
+    const pin_status = await pinHashToIPFS(path);
+
+    //*Formatting metadata with helper function described above .
+    const metadata = formatMetadata(formData, path, file);
     //*Finally calling the Pinata API to Pin the formatted metadata.
     await pinJSONToIPFS(metadata).then(function (res) {
       // console.log("JSON pinning res", res, "IPFShash", res.data["IpfsHash"]);
@@ -141,10 +140,11 @@ export const pinToPinata = async (formData, file) => {
 export const mintToNetwork = async (
   formData,
   file,
-  connectWallet,
-  ipfsData,
-  nftLoading,
+  account,
   dispatch,
+  buffer,
+  network_type,
+  setToast,
   network
 ) => {
   //*Setting up Ether functionality in order to interact with the network.
@@ -153,7 +153,7 @@ export const mintToNetwork = async (
   const _contract = new ethers.Contract(network, DAI_ABI, provider);
 
   //*Calling Helper function to start the pinning process and waiting for a successful response.
-  const res = await pinToPinata(formData, file);
+  const res = await pinToPinata(formData, file, buffer);
 
   //*If pinning was successful then we begin to mint the token with the IPFS Hash.
   if (res.status === true) {
@@ -164,14 +164,12 @@ export const mintToNetwork = async (
     const _contract_with_sig = _contract.connect(signer);
 
     //*Minting Token and Assigning Token URI all in one Function.
-    const mint_contract = await _contract_with_sig.safeMint(
-      connectWallet.account,
-      URI
-    );
+    const mint_contract = await _contract_with_sig.safeMint(account, URI);
+
     //! Was testing a wait to get the correct token ID from network after minting.
     // mint_contract.wait();
     // console.log("mint_contract", mint_contract);
-    // const total_tokens = await _contract.balanceOf(connectWallet.account);
+    // const total_tokens = await _contract.balanceOf(account);
     // const last_token_index =
     //   total_tokens.toNumber() === 0 ? 0 : total_tokens.toNumber() - 1;
     // const minted_token = await _contract_with_sig.tokenByIndex(
@@ -195,7 +193,7 @@ export const mintToNetwork = async (
       dispatch(setLoadingOff());
 
       //*Getting the latest Token ID aka the Minted Token we just Minted.
-      const total_tokens = await _contract.balanceOf(connectWallet.account);
+      const total_tokens = await _contract.balanceOf(account);
       const last_token_index =
         total_tokens.toNumber() === 0 ? 0 : total_tokens.toNumber() - 1;
       const minted_token = await _contract_with_sig.tokenByIndex(
@@ -203,41 +201,35 @@ export const mintToNetwork = async (
       );
       const retrieved_uri = await _contract.tokenURI(minted_token.toNumber());
 
+      const nft_url = network_type.includes("matic")
+        ? `https://testnets.opensea.io/assets/mumbai/${network}/${minted_token.toNumber()}`
+        : `https://testnets.opensea.io/assets/${network}/${minted_token.toNumber()}`;
+
       //*Retrieving IPFS Data now that we have the IPFS Hash from the Token URI.
       await retrievePinnedData(retrieved_uri).then((res) => {
-        // console.log("pinned data", res);
-        const ipfs_data_format = {
-          title: res.data.properties.name.description,
-          description: res.data.properties.description.description,
-          swagType: res.data.properties.swagType.description,
-          swagScore: res.data.properties.swagScore.description,
-          legacy: res.data.properties.legacy.description,
-          swagLevel: res.data.properties.swagLevel.description,
-          video:
-            "video" in res.data.properties
-              ? res.data.properties.video.description
-              : "",
-          image:
-            "image" in res.data.properties
-              ? res.data.properties.image.description
-              : "",
-        };
-
         //*Setting IPFS State Data with the above result.
-        dispatch(setIpfsData(ipfs_data_format));
-        console.log(
-          `
-Your Token ID is ${minted_token}
-
-The retrieved Token URI is ${retrieved_uri}
-
-Add the Token to your Meta Wallet => Contract Address: ${network}
-
-Data Retrieved from IPFS:
-
-${JSON.stringify(res.data, null, "\t")}
-          `
+        dispatch(setIpfsData(res.data));
+        dispatch(
+          setToast({
+            status: true,
+            type: "link",
+            message: "😃 View your NFT on OpenSea 😃",
+            message2: nft_url,
+          })
         );
+        console.log(
+          "Your Token ID is: ",
+          minted_token.toNumber(),
+          "\nThe retrieved Token URI (metadata) is: ",
+          retrieved_uri,
+          "\nThe retrieved Token URL (view NFT on IPFS) is: ",
+          res.data.imageUrl,
+          "\nAdd the Token to your Meta Wallet => Contract Address: ",
+          network,
+          "\nView your NFT on Opensea Testnet: ",
+          nft_url
+        );
+        console.log("|Data Retrieved from IPFS|\n", res.data);
       });
     }, 20000);
   } else console.log("error", res);

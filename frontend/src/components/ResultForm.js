@@ -281,16 +281,19 @@ export const ResultForm = () => {
           <S.Flex flexDirection="true" animation={"ZoomIn"} delay="2.5s">
             {ipfsData.video && (
               <S.VideoLooper
-                source={ipfsData.video}
+                source={ipfsData.imageUrl}
                 start={0.0}
-                end={7.0}
+                end={6.9}
                 muted={true}
                 autoplay={true}
                 loopCount={15}
                 isDebugMode={false}
               />
             )}
-            {ipfsData.image && <S.NftImage src={ipfsData.image}></S.NftImage>}
+
+            {ipfsData.image && (
+              <S.NftImage src={ipfsData.imageUrl}></S.NftImage>
+            )}
           </S.Flex>
         </S.Flex>
       )}

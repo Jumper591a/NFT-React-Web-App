@@ -15,7 +15,7 @@ import { useFileUpload } from "use-file-upload";
 
 import { mintToNetwork } from "../shared/_HelperFunctions";
 
-import { setFormData, setFormEmpty } from "../store/index";
+import { setFormData, setFormEmpty, setBuffer, setToast } from "../store/index";
 
 //*Importing Material-UI components from the Installed Material UI library.
 import TextField from "@material-ui/core/TextField";
@@ -25,6 +25,7 @@ import MenuItem from "@material-ui/core/MenuItem";
 import Button from "@material-ui/core/Button";
 import SearchIcon from "@material-ui/icons/Search";
 import FormControl from "@material-ui/core/FormControl";
+import { Input } from "@material-ui/core";
 
 //*Importing ContextTheme (to pass state data to components) & Importing Keyframe animations for element effects.
 //? import { contextTheme } from "../shared/_Constants";
@@ -110,8 +111,10 @@ S.StyledBtn = styled(Button)`
     margin-top: ${(props) => (props.margin ? props.margin : "10px")};
     background-color: #ffffff;
     border: ${(props) =>
-        props.animation !== "shakeY" && props.ready ? "6px double" : "groove"}
-      ${(props) => (props.boardercolor ? props.boardercolor : "white")};
+      props.animation !== "shakeY" && props.ready ? "6px double" : "groove"};
+
+    border-color: ${(props) =>
+      props.boardercolor ? props.boardercolor : "white"};
 
     &:hover {
       background-color: #ffffff;
@@ -126,6 +129,7 @@ S.StyledBtn = styled(Button)`
       transform-origin: center;
       animation-duration: 1s;
       animation-timing-function: ease-in-out;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
 
     &:focus {
@@ -267,18 +271,19 @@ export const InputForm = () => {
   //*State management for activating with the installed helper react component for
   //*grabbing user submitted media data.
   const [file, selectFile] = useFileUpload();
+  const [test_buffer, setTestBuffer] = useState({ media: "" });
 
   const dropdownRef = useRef({ value: "" });
 
-  const handleDropDown = (e) => {
-    dispatch(
-      setFormData({
-        swagType: e.target.value,
-        nftName: formData.nftName,
-        nftDescription: formData.nftDescription,
-      })
-    );
-    dropdownRef.current.value = e.target.value;
+  const handleFileChange = (e) => {
+    console.log("here", e.target.files[0]);
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.readAsArrayBuffer(file);
+    reader.onload = () => {
+      console.log("image: ", Buffer(reader.result));
+      setTestBuffer({ media: Buffer(reader.result) });
+    };
   };
 
   //*Helper Function for collecting user Media data from input form submission.
@@ -286,13 +291,17 @@ export const InputForm = () => {
     e.preventDefault();
 
     //*Installed React component for grabbing media files from form.
-    selectFile({}, ({ source, name, size, file }) => {
-      //? file - is the raw File Object
-      console.log(
-        "Your Uploaded Content: \n",
-        { source, name, size, file },
-        "\n"
-      );
+    selectFile({}, (e) => {
+      //   //? file - is the raw File Object
+      const { file, source, size, name } = e;
+      // console.log("Your Uploaded Content: \n", e, "file: ", file);
+
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+      reader.onload = () => {
+        dispatch(setBuffer({ media: Buffer(reader.result) }));
+      };
+
       setFormFile(true);
     });
   };
@@ -303,10 +312,11 @@ export const InputForm = () => {
       mintToNetwork(
         formData,
         file,
-        connectWallet,
-        ipfsData,
-        nftLoading,
+        connectWallet.account,
         dispatch,
+        formData.buffer,
+        type,
+        setToast,
         CONTRACT_ADDRESS_MATIC_TEST
       );
       setFormFile(false);
@@ -314,10 +324,11 @@ export const InputForm = () => {
       mintToNetwork(
         formData,
         file,
-        connectWallet,
-        ipfsData,
-        nftLoading,
+        connectWallet.account,
         dispatch,
+        formData.buffer,
+        type,
+        setToast,
         CONTRACT_ADDRESS_RINKEBY_TEST
       );
       setFormFile(false);
@@ -428,6 +439,12 @@ export const InputForm = () => {
           // setMedia(!media);
         }}
       />
+
+      {/* <input
+        id="file-change"
+        type="file"
+        onChange={(event) => handleFileChange(event)}
+      /> */}
 
       {file && formFile ? (
         <S.FileDetailsBox id="main-FileDetailsBox">

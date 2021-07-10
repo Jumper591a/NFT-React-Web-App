@@ -6,7 +6,7 @@ import styled from "styled-components/macro";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { setNetwork } from "../store/index";
+import { setNetwork, setToast, resetToast } from "../store/index";
 
 //*Importing ContextTheme(for passing data to other components), animations,
 //*and helper functions from shared folder.
@@ -72,6 +72,10 @@ S.AppContainer = styled.div`
     background: white;
     box-shadow: 0px 2px 33px 0px rgba(0, 0, 0, 0.02);
   }
+  & a {
+    color: #0060b6;
+    text-decoration: none;
+  }
 `;
 
 S.FlexContainer = styled.div`
@@ -136,17 +140,18 @@ const App = () => {
   // const context_result_form = { ipfsData, nftLoading };
 
   const { status } = useSelector((state) => state.connectWallet);
+  const toast = useSelector((state) => state.toast);
 
   const dispatch = useDispatch();
 
   const metaMask = window.ethereum;
-  const [toast, setToast] = useState(false);
+  // const [toast, setToast] = useState(false);
 
   const toastClose = (event, reason) => {
     if (reason === "clickaway") {
       return;
     }
-    setToast(false);
+    dispatch(resetToast());
   };
 
   metaMask.on("chainChanged", (chainId) => {
@@ -154,12 +159,21 @@ const App = () => {
     // Correctly handling chain changes can be complicated.
     // We recommend reloading the page unless you have good reason not to.
     // window.location.reload();
-    setToast(false);
+    dispatch(resetToast());
     if (chainId === "0x13881") dispatch(setNetwork("matic_test"));
     else if (chainId === "0x4") dispatch(setNetwork("rinkeby_test"));
     else {
       dispatch(setNetwork(""));
-      setToast(true);
+      dispatch(
+        setToast({
+          status: true,
+          type: "",
+          message:
+            "Error: Rinkeby or Mumbai is not selected as network on Metamask extension.",
+          message2:
+            "Make sure Rinkeby or Mumbai Network is selected on MetaMask Extension!",
+        })
+      );
     }
     console.log("onchange", chainId);
   });
@@ -171,8 +185,8 @@ const App = () => {
       <ConnectWallet />
       <S.Error status={status ? "1" : ""}>
         <Snackbar
-          open={toast}
-          autoHideDuration={10000}
+          open={toast.status}
+          autoHideDuration={20000}
           onClose={toastClose}
           // anchorOrigin={{
           //   horizontal: "center",
@@ -180,17 +194,14 @@ const App = () => {
           // }}
         >
           <Alert onClose={toastClose} severity="info">
-            <AlertTitle>
-              {
-                "Error: Rinkeby or Mumbai is not selected as network on Metamask extension."
-              }
-            </AlertTitle>
-
-            <strong>
-              {
-                "Make sure Rinkeby or Mumbai Network is selected on MetaMask Extension!"
-              }
-            </strong>
+            <AlertTitle>{toast.message}</AlertTitle>
+            {toast.type ? (
+              <a href={toast.message2} target="_blank" rel="noreferrer">
+                <strong>{toast.message2}</strong>
+              </a>
+            ) : (
+              <strong>{toast.message2}</strong>
+            )}
           </Alert>
         </Snackbar>
       </S.Error>

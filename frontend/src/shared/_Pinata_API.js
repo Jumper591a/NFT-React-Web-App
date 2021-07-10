@@ -102,6 +102,27 @@ export const pinJSONToIPFS = async (JSONBody) => {
     });
 };
 
+export const pinHashToIPFS = async (hash) => {
+  const url = "https://api.pinata.cloud/pinning/pinByHash";
+
+  return await axios
+    .post(
+      url,
+      { hashToPin: hash },
+      {
+        headers: {
+          pinata_api_key: pinata_api_key,
+          pinata_secret_api_key: pinata_secret_api_key,
+        },
+      }
+    )
+    .catch(function (error) {
+      //handle error here
+      console.log("JSON pinning error", error);
+      return Promise.reject(error);
+    });
+};
+
 export const retrievePinnedData = async (URL) => {
   // console.log("URL in pin func", URL);
   return await axios.get(URL).catch(function (error) {

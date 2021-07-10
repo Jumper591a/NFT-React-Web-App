@@ -30,6 +30,7 @@ export const formData = createSlice({
     swagType: "",
     nftName: "",
     nftDescription: "",
+    buffer: "",
   },
   reducers: {
     setFormData: (state, { payload }) => {
@@ -40,6 +41,9 @@ export const formData = createSlice({
       state.swagType = payload.swagType;
       state.nftName = payload.nftName;
       state.nftDescription = payload.nftDescription;
+    },
+    setBuffer: (state, { payload }) => {
+      state.buffer = payload.media;
     },
     setFormEmpty: (state) => {
       state.swagType = "";
@@ -61,6 +65,7 @@ export const ipfsData = createSlice({
     swagLevel: "",
     video: "",
     image: "",
+    imageUrl: "",
   },
   reducers: {
     setIpfsData: (state, { payload }) => {
@@ -75,8 +80,9 @@ export const ipfsData = createSlice({
       state.swagScore = payload.swagScore;
       state.legacy = payload.legacy;
       state.swagLevel = payload.swagLevel;
-      state.video = payload.video;
-      state.image = payload.image;
+      state.video = payload.image_type.includes("video") ? payload.image : "";
+      state.image = payload.image_type.includes("image") ? payload.image : "";
+      state.imageUrl = payload.imageUrl;
     },
     setIpfsEmpty: (state) => {
       state.status = false;
@@ -88,6 +94,7 @@ export const ipfsData = createSlice({
       state.swagLevel = "";
       state.video = "";
       state.image = "";
+      state.imageUrl = "";
     },
   },
 });
@@ -98,6 +105,22 @@ export const nftLoading = createSlice({
   reducers: {
     setNftLoading: (state) => true,
     setLoadingOff: (state) => false,
+  },
+});
+
+export const toast = createSlice({
+  name: "toast",
+  initialState: { status: false, type: "", message: "", message2: "" },
+  reducers: {
+    setToast: (state, { payload }) => {
+      state.status = true;
+      state.type = payload.type;
+      state.message = payload.message;
+      state.message2 = payload.message2;
+    },
+    resetToast: (state) => {
+      state.status = false;
+    },
   },
 });
 
@@ -113,10 +136,11 @@ export const network = createSlice({
 });
 
 export const { activate, deactivate } = connectWallet.actions;
-export const { setFormData, setFormEmpty } = formData.actions;
+export const { setFormData, setFormEmpty, setBuffer } = formData.actions;
 export const { setIpfsData, setIpfsEmpty } = ipfsData.actions;
 export const { setNftLoading, setLoadingOff } = nftLoading.actions;
 export const { setNetwork } = network.actions;
+export const { setToast, resetToast } = toast.actions;
 
 const __reducers = {
   connectWallet: connectWallet.reducer,
@@ -124,6 +148,7 @@ const __reducers = {
   ipfsData: ipfsData.reducer,
   nftLoading: nftLoading.reducer,
   network: network.reducer,
+  toast: toast.reducer,
 };
 
 const middleware = [...getDefaultMiddleware(), logger];
