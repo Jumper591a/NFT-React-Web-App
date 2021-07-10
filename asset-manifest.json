@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/NFT-React-Web-App/static/css/main.adfa766f.chunk.css",
-    "main.js": "/NFT-React-Web-App/static/js/main.1e202f92.chunk.js",
-    "main.js.map": "/NFT-React-Web-App/static/js/main.1e202f92.chunk.js.map",
+    "main.js": "/NFT-React-Web-App/static/js/main.a20f03c2.chunk.js",
+    "main.js.map": "/NFT-React-Web-App/static/js/main.a20f03c2.chunk.js.map",
     "runtime-main.js": "/NFT-React-Web-App/static/js/runtime-main.af57f7a9.js",
     "runtime-main.js.map": "/NFT-React-Web-App/static/js/runtime-main.af57f7a9.js.map",
     "static/js/2.66f24691.chunk.js": "/NFT-React-Web-App/static/js/2.66f24691.chunk.js",
@@ -12,13 +12,13 @@
     "index.html": "/NFT-React-Web-App/index.html",
     "static/css/main.adfa766f.chunk.css.map": "/NFT-React-Web-App/static/css/main.adfa766f.chunk.css.map",
     "static/js/2.66f24691.chunk.js.LICENSE.txt": "/NFT-React-Web-App/static/js/2.66f24691.chunk.js.LICENSE.txt",
-    "static/js/main.1e202f92.chunk.js.LICENSE.txt": "/NFT-React-Web-App/static/js/main.1e202f92.chunk.js.LICENSE.txt",
+    "static/js/main.a20f03c2.chunk.js.LICENSE.txt": "/NFT-React-Web-App/static/js/main.a20f03c2.chunk.js.LICENSE.txt",
     "static/media/swag_logo_2.ac607bdc.jpg": "/NFT-React-Web-App/static/media/swag_logo_2.ac607bdc.jpg"
   },
   "entrypoints": [
     "static/js/runtime-main.af57f7a9.js",
     "static/js/2.66f24691.chunk.js",
     "static/css/main.adfa766f.chunk.css",
-    "static/js/main.1e202f92.chunk.js"
+    "static/js/main.a20f03c2.chunk.js"
   ]
 }
