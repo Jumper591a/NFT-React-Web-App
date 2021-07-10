@@ -1,22 +1,22 @@
-{
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app_V2.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "apollo-server-express": "^2.25.2",
-    "express": "^4.17.1",
-    "graphql": "^15.5.1",
-    "mongoose": "^5.13.2"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.9"
-  }
-}
+// {
+//   "name": "backend",
+//   "version": "1.0.0",
+//   "description": "",
+//   "main": "index.js",
+//   "scripts": {
+//     "test": "echo \"Error: no test specified\" && exit 1",
+//     "start": "nodemon app_V2.js"
+//   },
+//   "keywords": [],
+//   "author": "",
+//   "license": "ISC",
+//   "dependencies": {
+//     "apollo-server-express": "^2.25.2",
+//     "express": "^4.17.1",
+//     "graphql": "^15.5.1",
+//     "mongoose": "^5.13.2"
+//   },
+//   "devDependencies": {
+//     "nodemon": "^2.0.9"
+//   }
+// }
