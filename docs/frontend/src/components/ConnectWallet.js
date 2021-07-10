@@ -190,6 +190,8 @@ export const ConnectWallet = () => {
 
     if (typeof metaMask === "undefined") {
       setToast({ status: true, error: "install" });
+      const connectBtn = document.getElementById("connectBtn");
+      connectBtn.click();
     } else if (network_chainId_status === "network_off")
       setToast({ status: true, error: "network" });
     else {
@@ -214,7 +216,7 @@ export const ConnectWallet = () => {
   };
 
   return (
-    <S.WalletConnectContain animation={status ? "true" : ""}>
+    <S.WalletConnectContain id="connectBtn" animation={status ? "true" : ""}>
       <Snackbar
         open={toast.status}
         autoHideDuration={6000}

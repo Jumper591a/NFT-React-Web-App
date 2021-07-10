@@ -26,7 +26,7 @@ S.Header = styled.div`
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
   @media screen and (max-width: 699.667px) {
-    flex-direction: column-reverse;
+    flex-direction: column;
   }
 `;
 S.HeaderLogo = styled.img`
@@ -36,6 +36,11 @@ S.HeaderLogo = styled.img`
   transform-origin: center;
   animation-duration: 0.9s;
   animation-timing-function: ease-in-out;
+  margin-left: 180px;
+  @media screen and (max-width: 1105px) {
+    margin-left: 0px;
+    margin-right: 74px;
+  }
   /* background-color: #333333; */
 `;
 
@@ -63,11 +68,17 @@ S.Tooltip = styled(Tooltip)``;
 S.WalletTip = styled.h5`
   color: white;
   font-size: 12px;
-  position: fixed;
-  right: 80px;
+  position: relative;
+  /* right: 140px; */
   @media screen and (max-width: 1105px) {
     display: none;
   }
+`;
+S.Flex = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 `;
 export const Header = () => {
   //*Getting important state data via ContextTheme.
@@ -89,8 +100,11 @@ export const Header = () => {
           Connected
         </S.Button>
       </S.Tooltip>
-      <S.HeaderLogo src={swag_logo_1} animation={status ? "true" : ""} />
-      <S.WalletTip>⏫ Switch Network Type with Metamask ⏫ </S.WalletTip>
+      <S.Flex>
+        <S.HeaderLogo src={swag_logo_1} animation={status ? "true" : ""} />
+
+        <S.WalletTip>⏫ Switch Network Type with Metamask ⏫ </S.WalletTip>
+      </S.Flex>
     </S.Header>
   );
 };

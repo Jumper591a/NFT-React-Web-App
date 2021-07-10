@@ -60,7 +60,7 @@ S.FormInput = styled.form`
 `;
 
 S.FormTitle = styled.h2`
-  color: white;
+  color: ${(props) => (props.color ? props.color : "white")};
   text-align: center;
   margin-top: ${(props) => (props.marginTop ? props.marginTop : "")};
   font-size: ${(props) => (props.fontSize ? props.fontSize : "35px")};
@@ -338,6 +338,13 @@ export const InputForm = () => {
   return (
     <S.FormInput>
       <S.FormTitle
+        color={
+          type === "rinkeby_test"
+            ? "yellow"
+            : type === "matic_test"
+            ? "#3932FC  "
+            : "#333"
+        }
         fontSize="15px"
         marginTop="20px"
         animation={!type ? "1" : ""}

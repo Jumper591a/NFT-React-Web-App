@@ -154,29 +154,30 @@ const App = () => {
     dispatch(resetToast());
   };
 
-  metaMask.on("chainChanged", (chainId) => {
-    // Handle the new chain.
-    // Correctly handling chain changes can be complicated.
-    // We recommend reloading the page unless you have good reason not to.
-    // window.location.reload();
-    dispatch(resetToast());
-    if (chainId === "0x13881") dispatch(setNetwork("matic_test"));
-    else if (chainId === "0x4") dispatch(setNetwork("rinkeby_test"));
-    else {
-      dispatch(setNetwork(""));
-      dispatch(
-        setToast({
-          status: true,
-          type: "",
-          message:
-            "Error: Rinkeby or Mumbai is not selected as network on Metamask extension.",
-          message2:
-            "Make sure Rinkeby or Mumbai Network is selected on MetaMask Extension!",
-        })
-      );
-    }
-    console.log("onchange", chainId);
-  });
+  if (metaMask)
+    metaMask.on("chainChanged", (chainId) => {
+      // Handle the new chain.
+      // Correctly handling chain changes can be complicated.
+      // We recommend reloading the page unless you have good reason not to.
+      // window.location.reload();
+      dispatch(resetToast());
+      if (chainId === "0x13881") dispatch(setNetwork("matic_test"));
+      else if (chainId === "0x4") dispatch(setNetwork("rinkeby_test"));
+      else {
+        dispatch(setNetwork(""));
+        dispatch(
+          setToast({
+            status: true,
+            type: "",
+            message:
+              "Error: Rinkeby or Mumbai is not selected as network on Metamask extension.",
+            message2:
+              "Make sure Rinkeby or Mumbai Network is selected on MetaMask Extension!",
+          })
+        );
+      }
+      console.log("onchange", chainId);
+    });
 
   return (
     <S.AppContainer>
