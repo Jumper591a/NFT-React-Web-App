@@ -1,5 +1,0 @@
-//! Was testing a wait to get the correct token ID from network after minting.
-
-//!Declaring Variables for passing via ContextTheme to other react components.
-
-//!SetTimeOut - needed for getting the latest/correct token ID from the network
