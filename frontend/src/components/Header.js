@@ -90,7 +90,6 @@ export const Header = () => {
         </S.Button>
       </S.Tooltip>
       <S.HeaderLogo src={swag_logo_1} animation={status ? "true" : ""} />
-
       <S.WalletTip>⏫ Switch Network Type with Metamask ⏫ </S.WalletTip>
     </S.Header>
   );
